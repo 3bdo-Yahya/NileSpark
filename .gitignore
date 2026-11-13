@@ -22,9 +22,9 @@ data/archives/**
 *.parquet
 *.duckdb
 
-# Hackathon reference PDFs (local only; not product code)
+# Hackathon reference (local only — PDFs, mails, guides)
 *.pdf
-docs/hackathon/*.pdf
+docs/hackathon/
 
 # Keep tiny fixtures for tests
 !data/fixtures/
@@ -50,4 +50,5 @@ frontend/.next/
 
 # Logs
 *.log
+
 
