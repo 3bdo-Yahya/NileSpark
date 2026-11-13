@@ -1,0 +1,1 @@
+"""BurnCal FastAPI application (Ali)."""

@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+
+/* Tailwind v4 CSS-first theme: the single source of truth for Figma values. */
+@theme {
+  --color-space: #060b11;
+  --color-panel: #0d151e;
+  --color-raised: #101b25;
+  --color-control: #162934;
+  --color-paper: #f7f5ef;
+  --color-secondary: #c2c9cc;
+  --color-muted: #a5b8c6;
+  --color-stroke: #344955;
+  --color-stroke-strong: #607585;
+  --color-brand: #f3a66b;
+  --color-brand-hover: #ffc08d;
+  --color-horizon: #eac8ab;
+  --color-on-brand: #141514;
+  --color-focus: #91d9df;
+  --color-info: #a5d6ec;
+  --color-success: #a2d4b3;
+  --color-warning: #f3c68d;
+  --color-danger: #ffb4ac;
+  --font-display: 'Space Grotesk Variable', 'Segoe UI', sans-serif;
+  --font-body: 'Inter Variable', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', Consolas, monospace;
+  --text-caption: 0.6875rem;
+  --text-label: 0.8125rem;
+  --radius-panel: 1.25rem;
+  --radius-control: 0.875rem;
+  --ease-gentle: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --shadow-panel: 0 24px 80px rgb(0 0 0 / 30%);
+}
+:root {
+  color-scheme: dark;
+  --page-gutter: clamp(1.25rem, 3.2vw, 3rem);
+}

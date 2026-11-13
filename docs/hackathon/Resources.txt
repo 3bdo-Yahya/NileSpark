@@ -1,0 +1,408 @@
+Resources
+
+NASA does not endorse any non-U.S. Government entity and is not responsible for information contained on non-U.S. Government websites. For non-U.S. Government websites, participants must comply with any data use parameters of that specific website.
+NASA Data & Resources
+
+FIRMS NASA EARTHDATA: Fire Information for Resource Management System [https://www.earthdata.nasa.gov/data/tools/firms]: The Fire Information for Resource Management System (FIRMS) enables access to global near real-time satellite imagery, active fire/hotspots, and related products to identify the location, extent, and intensity of wildfire activity. FIRMS tools and applications provide geospatial data, products, and services to support the broader fire management community and to inform the general public. 
+
+------------------------------------------------------------------
+
+Page Content [https://www.earthdata.nasa.gov/data/tools/firms]:
+
+Skip to main content
+Earthdata Forum is down due to unplanned maintenance. Please contact earthdata-support@nasa.gov with questions. See the alert
+Suomi NPP is no longer delivering new data. Users must transition to alternative products. Suomi NPP data announcement
+NASA Home Home
+
+    Data
+    Toggle submenu
+    Topics
+    Toggle submenu
+    Learn
+    Toggle submenu
+    Centers
+    Toggle submenu
+    Engage
+    Toggle submenu
+    About
+    Toggle submenu
+    News & Events
+    Toggle submenu
+
+    Home
+    Find Data
+    Data Tools
+    FIRMS
+
+FIRMS global fire location map
+FIRMS
+Fire Information for Resource Management System
+Providing Active Fire Data for Near-Real Time Monitoring and Applications
+Discover FIRMS
+
+    Global Fire Map
+    US/Canada Fire Map
+    Active Fire Data
+    Email Alerts
+    Archive Download
+    Web Services
+    Contact us and FAQs
+
+About
+Background
+NASA Active Fire Data
+Publications
+Links
+MODIS Active Fire Products
+
+Each MODIS active fire/thermal hotspot location represents the center of a 1km pixel that is flagged by the algorithm as containing one or more fires within the pixel. Combined (Terra and Aqua) MODIS NRT active fire products (MCD14DL) are processed using the standard MOD14/MYD14 Fire and Thermal Anomalies algorithm.
+
+MODIS Collection 61 has been available since April 2021. C61 processing does not contain any change to the science algorithm; the update is from changes and enhancements to the calibration approach used in the generation of the Terra and Aqua MODIS Level 1B products. For further details on C61 calibration changes and other changes user is encouraged to refer to the PDF summarizing Collection 6.1 specific changes. For the most up to date information, please refer to the MODIS Collection 6 and 6.1 Version 1.0 Active Fire Product User's Guide (updated May 2021).
+VIIRS (375m) Active Fire Products
+
+Each VIIRS active fire/thermal hotspot location represents the center of a 375m pixel. The VIIRS data complement the MODIS fire detections but the improved spatial resolution of the 375 m data provides a greater response of fires over relatively small areas and has improved nighttime performance. Read more on VIIRS active fire products.
+
+VIIRS NRT 375 m active fire products are from: Suomi NPP (VNP14IMGTDL_NRT); NOAA-20, formally known as JPSS-1 (VJ114IMGTDL_NRT); and NOAA-21, formally known as JPSS-2 (VJ214IMGTDL_NRT).
+Active Fire Data Attributes for MODIS and VIIRS
+
+View data attribute tables for NRT MODIS active fire data and NRT VIIRS 375m active fire data.
+Tool at a Glance
+View data alert history
+Data Tool Type
+Access
+Visualization
+Related Topic
+Fire Management
+Wildfires
+FIRMS News
+View All News
+Filters
+Copy Link
+Type
+Topic
+Data Tool
+Instrument
+Project
+Data Mechanic
+Black Marble Nighttime Blue/Yellow Composite (Day/Night Band) false-color image shows Typhoon Khanun nearing Taiwan on August 2, 2023.
+
+Transitioning From Suomi NPP to NOAA-20 and NOAA-21: What LANCE Users Need to Know
+Information on what the cessation of Suomi NPP data means for users of LANCE data products, with recommended replacement datasets.
+Blog
+Nov. 3, 2026
+FIRMS image of fires over southeast Asia along with aerosol index data
+
+Transitioning from Suomi NPP VIIRS & OMPS: What FIRMS Users Need to Know
+We provide information on what this change means for your workflows and the recommended replacement datasets you can use in FIRMS to ensure uninterrupted fire monitoring.
+Blog
+Oct. 27, 2026
+view of FIRMS application showing aerosol data
+
+New Higher-Resolution Aerosol Index, Pyrocumulonimbus Layers Now Available in NASA FIRMS
+New NOAA-21 OMPS products complement existing NOAA-20 and Suomi NPP indices currently available in FIRMS, but offer a significant upgrade in spatial resolution.
+Blog
+Oct. 13, 2026
+satellite swath patterns from the FIRMS application over Africa
+
+New FIRMS Data Product: Satellite Swath Outlines
+NASA's Fire Information for Resource Management System now provides swath outlines, showing the extent of Earth's surface within view of a sensor.
+Blog
+June 25, 2026
+SHOWING 4 OF 75
+Items
+FIRMS Learning Resources
+View All Learning Resources
+Filters
+Copy Link
+Type
+Satellite imagery showing burned area and active fire fronts from the Dragon Bravo fire.
+
+Empowering Fire Managers: New HLS Capabilities in NASA's FIRMS
+Learn how the Fire Information for Resource Management System (FIRMS) uses timely composite imagery to identify fire fronts, burned areas, and smoke.
+Webinar
+June 17, 2026
+Sentinel false-color imagery embedded in the FIRMS portal makes it easier to detect healthy vegetation..
+
+Customize Fire Related Imagery Through the HLS Interface, TiTiler, and FIRMS
+FIRMS has incorporated additional capabilities into the HLS dropdown menu of its interactive map, including four vegetation indices and the ability for user to create their own red, green, blue (RGB) image composites through the TiTiler-CMR service.
+Tutorial
+April 29, 2026
+Four images of fires, smoke, fire locations, and burned areas from space.
+
+Advanced NASA Earth Observations and Tools for Active Fire, Smoke, and Post-Fire Monitoring
+This ARSET training introduces participants to several capabilities within FIRMS that were not included in the previous ARSET training.
+Training
+Jan. 14-21, 2026
+Four images of fires, smoke, fire locations, and burned areas from space.
+
+Observaciones Satelitales y Herramientas de la NASA para el Monitoreo de Incendios Activos, Humo y Evaluación Post-Incendio
+Esta capacitación de dos partes familarizará a los participantes con varias capacidades dentro de FIRMS que no se incluyeron en la capacitación de ARSET anterior.
+Training
+Jan. 14-21, 2026
+Pagination
+
+    Disabled
+    1
+    2
+    3
+    4
+    5
+    …
+    7 Last page
+    Next page
+
+SHOWING 4 OF 28
+Items
+Join Our Community of NASA Data Users
+
+While NASA data are openly available without restriction, an Earthdata Login is required to download data and to use some tools with full functionality.
+Learn About the Benefits of Earthdata Login
+Get Help
+
+QUESTIONS & SUPPORT
+Have a question?
+
+Get help with NASA Earth science data, datasets, tools, services, and metadata on the Earthdata Forum. Experienced staff in the data user community review and answer questions.
+Get help on Earthdata Forum
+Earthdata
+Forum
+Find Data
+By Platform
+
+Explore data collected by platforms in space, air, water, and land.
+By Topic
+
+Browse by topic to find relevant data, tools, learning resources, news, and more.
+Data Catalog
+
+Dive into one of the planet’s largest repositories of Earth science data.
+Data Tools
+
+Access a range of tools that enable data discovery, analysis, and visualization.
+Home
+
+    NASA Earth on Facebook NASA on Instagram NASA Earth on X NASA on YouTube 
+
+Footer
+
+    Find Data
+        Data Catalog
+        Data Tools
+        Platforms
+        Instruments
+        Space Geodesy Techniques
+        Projects
+        Data Alerts and Outages
+        Earthdata Login
+    Data Pathfinders by Topic
+        Atmosphere
+        Biosphere
+        Climate Indicators
+        Cryosphere
+        Human Dimensions
+        Land Surface
+        Ocean
+        Solid Earth
+        Sun-Earth Interactions
+        Terrestrial Hydrosphere
+    Learn
+        Earth Observation Data Basics
+        Earthdata Forum
+        Webinars
+        Trainings
+        Tutorials
+        Data in Action
+        Data Recipes
+        GIS Resources
+        StoryMaps
+        Publications
+    Centers
+        ASF DAAC
+        ASDC
+        CDDIS
+        GHRC DAAC
+        GES DISC
+        LP DAAC
+        LAADS DAAC
+        NSIDC DAAC
+        ORNL DAAC
+        OB.DAAC
+        PO.DAAC
+        Sea Level Change Portal
+        Suborbital Data Resource Center
+    Engage
+        Data Management Guidance for ESD-funded Researchers
+        Open Data, Services, and Software Policies
+        Public and Private Partnerships
+        Memberships and Affiliations
+    News
+        Events
+        Newsletter
+        Contact
+
+Footer Submenu
+
+    Web Privacy Policy
+    Data and Information Guidance
+    Communications Policy
+    FOIA
+    Accessibility
+    Sitemap
+    USA.gov
+
+    Site last Updated:Nov. 6, 2026
+
+    NASA Official:Katie Baynes
+
+------------------------------------------------------------------
+
+Page content [https://firms.modaps.eosdis.nasa.gov/active_fire/]:
+
+Logo
+FIRMS
+Fire Information for Resource Management System
+
+    Quick SearchAnnouncementsFeedback
+
+Active Fire Data
+
+Download active fire products from the Moderate Resolution Imaging Spectroradiometer (MODIS) , Visible Infrared Imaging Radiometer Suite (VIIRS) and Landsat Operational Land Imager (OLI) for the last 24, 48 hours and 7 days in shapefile, KML or text file formats.
+Also available through FIRMS:
+
+    WMS and WMS-T
+    FIRMS Archive Download * for data older than 7 days
+    Daily text files for the last two months via HTTPS: https://nrt3.modaps.eosdis.nasa.gov/archive/FIRMS
+
+Register for an Earthdata Login to start downloading data
+
+* Please note on the Archive Download, the NRT data is replaced with data extracted from the standard MODIS and VIIRS active fire products as it becomes available (usually after 2-3 months, but possibly up to 5 months). Users intending to perform scientific analysis are advised to download the standard (science quality) data.
+
+    MODIS C6.1 is available from November 2000 (for Terra) and from July 2002 (for Aqua) to the present.
+    VIIRS 375 m (NOAA-20) data are currently available from 01 April 2018 to the present.
+    VIIRS 375 m (NOAA-21) data are currently available from 17 January 2024 to the present.
+    LANDSAT 30 m OLI (8 / 9) data are currently available from 20 June 2022 to the present.
+
+For more information about FIRMS and the active fire products.
+
+
+Details about regional coordinates.
+Note about Real-Time (RT) and Ultra Real-Time (URT) data
+Real-Time (RT) and Ultra Real-Time (URT) data is available through these services:
+
+    API - area
+    KML - fire footprints
+    WFS
+    WMS
+
+RT and URT data are removed when corresponding NRT detections are processed or RT/URT is older than 6 hours.
+Coming soon: RT and URT data as part of the CSV, ShapeFile and KML/KMZ Active Fire downloads
+
+NASA EOSDIS defines Real-Time as data that is made available within 60 minutes of satellite overpass. URT is much quicker than that. FIRMS makes URT data available in less than 60 seconds of satellite fly over for much of the US and Canada
+Learn more about Ultra Real-Time data.
+Shapefiles
+	MODIS 1km 	VIIRS 375m / NOAA-20 	VIIRS 375m / NOAA-21 	LANDSAT 30m
+World 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+Canada 	24h  48h  7d	24h  48h  7d	24h  48h  7d	24h  48h  7d
+Alaska 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+USA (Conterminous) and Hawaii 	24h  48h  7d	24h  48h  7d	24h  48h  7d	24h  48h  7d
+Central America 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+South America 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+Europe 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+North and Central Africa 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+Southern Africa 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+Russia and Asia 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+South Asia 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+South East Asia 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+Australia and New Zealand 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+Google Earth KML
+
+How to Auto-Refresh FIRMS KML in Google Earth Pro
+
+Animated files are marked as (anim).
+	MODIS 1km 	VIIRS 375m / NOAA-20 	VIIRS 375m / NOAA-21 	LANDSAT 30m
+World 	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)	N/A
+Canada 	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)
+Alaska 	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)	N/A
+USA (Conterminous) and Hawaii 	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)
+Central America 	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)	N/A
+South America 	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)	N/A
+Europe 	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)	N/A
+North and Central Africa 	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)	N/A
+Southern Africa 	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)	N/A
+Russia and Asia 	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)	N/A
+South Asia 	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)	N/A
+South East Asia 	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)	N/A
+Australia and New Zealand 	24h  48h  48h (anim)	24h  48h  48h (anim)	24h  48h  48h (anim)	N/A
+Text Files (CSV)
+
+Register to start downloading daily text files for the last two months:
+
+    MODIS Collection 6.1
+    VIIRS 375m / NOAA-20
+    VIIRS 375m / NOAA-21
+    LANDSAT
+
+To keep file sizes to a minimum, the data are provided by region.
+	MODIS 1km 	VIIRS 375m / NOAA-20 	VIIRS 375m / NOAA-21 	LANDSAT 30m
+World 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+Canada 	24h  48h  7d	24h  48h  7d	24h  48h  7d	24h  48h  7d
+Alaska 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+USA (Conterminous) and Hawaii 	24h  48h  7d	24h  48h  7d	24h  48h  7d	24h  48h  7d
+Central America 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+South America 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+Europe 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+North and Central Africa 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+Southern Africa 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+Russia and Asia 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+South Asia 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+South East Asia 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+Australia and New Zealand 	24h  48h  7d	24h  48h  7d	24h  48h  7d	N/A
+home home
+FIRMS
+
+    Global Fire Map
+    US & Canada Fire Map
+    Active Fire Data
+    Satellite Imagery
+    Blog - What's new
+    Fire Alerts
+    Download Archived Data
+    Web Services
+    Tutorials
+    FAQs
+    Additional Resources
+    FIRMS - US & Canada 
+
+About
+
+    MODIS Active Fire Data
+    VIIRS Active Fire Data
+    LANCE
+    Background
+    Disclaimer
+    Version: 2.13.6
+
+Data
+
+    Global Fire Map
+    US & Canada Fire Map
+    Fire Alerts
+    Download Archived Data
+    Web Services
+    Tutorials
+    Fire Data Academy
+    SHP | TXT | KML
+
+Resources
+
+    FIRMS - US & Canada
+    Satellite Imagery
+    FIRMS Blog
+    FAQ
+    Additional Resources
+    Acknowledgements & Citation
+    FIRMS Mailing List
+
+    NASA Official: Sadashiva DevadigaWeb Privacy PolicyScience Information PolicyAccessibilityCommunications PolicyFOIA
+
+

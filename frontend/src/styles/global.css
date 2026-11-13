@@ -1,0 +1,74 @@
+@reference './tokens.css';
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 2rem;
+  }
+  body {
+    @apply m-0 bg-space font-body text-[15px] leading-relaxed text-paper antialiased;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+  a {
+    text-underline-offset: 0.25em;
+  }
+  img {
+    @apply block max-w-full;
+  }
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [tabindex] {
+    outline-offset: 5px;
+  }
+  :focus-visible {
+    @apply outline-2 outline-focus;
+  }
+  ::selection {
+    @apply bg-brand text-on-brand;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display font-medium leading-[1.15];
+  }
+  h2 {
+    @apply text-[clamp(2rem,3.5vw,3.25rem)] tracking-[-0.055em];
+  }
+  h3 {
+    @apply text-2xl tracking-[-0.04em];
+  }
+}
+@layer components {
+  .eyebrow {
+    @apply font-mono text-caption leading-relaxed tracking-[0.12em] text-muted uppercase;
+  }
+  .section-shell {
+    @apply mx-auto w-full max-w-[1440px] px-[var(--page-gutter)];
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0ms !important;
+  }
+}

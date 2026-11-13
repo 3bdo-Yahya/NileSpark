@@ -1,0 +1,8 @@
+Team Members:
+
+1. Abdelrahman Yahia - Team Leader, Software, Back-end
+2. Salma Gad - AI
+3. Omar Mohamed - Front-end
+4. Ali Haggag - Fullstack
+5. Maryem Helal - AI, Storyteller
+6. Mahmoud Abdelhady - Video Editor

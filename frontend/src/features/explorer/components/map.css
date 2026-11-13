@@ -1,0 +1,40 @@
+.burncal-map .maplibregl-ctrl-group {
+  background: #101b25;
+  border: 1px solid #607585;
+  border-radius: 10px;
+}
+.burncal-map .maplibregl-ctrl-group button {
+  width: 40px;
+  height: 40px;
+}
+.burncal-map .maplibregl-ctrl-group button + button {
+  border-top-color: #344955;
+}
+.burncal-map .maplibregl-ctrl-icon {
+  filter: invert(1);
+}
+.burncal-map .maplibregl-ctrl-attrib {
+  font-size: 10px;
+}
+.burncal-map .maplibregl-popup-content {
+  max-width: 250px;
+  padding: 20px;
+  background: #0d151e;
+  color: #f7f5ef;
+  border: 1px solid #607585;
+  border-radius: 12px;
+  font-family: 'Inter Variable', sans-serif;
+  font-size: 12px;
+}
+.burncal-map .maplibregl-popup-close-button {
+  right: 4px;
+  top: 4px;
+  width: 28px;
+  height: 28px;
+}
+.burncal-map.maplibregl-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

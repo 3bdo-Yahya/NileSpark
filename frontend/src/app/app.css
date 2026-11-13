@@ -1,0 +1,65 @@
+/* Artwork-specific gradients and orbit geometry; layout uses Tailwind utilities. */
+.hero-shade {
+  background:
+    linear-gradient(90deg, rgb(6 11 17 / 96%) 0%, rgb(6 11 17 / 56%) 48%, rgb(6 11 17 / 3%) 100%),
+    linear-gradient(180deg, rgb(5 9 15 / 30%), transparent 48%, rgb(5 9 15 / 96%));
+}
+.orbital-target {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  border: 1px solid rgb(243 166 107 / 35%);
+  border-radius: 50%;
+}
+.orbital-target::before,
+.orbital-target::after,
+.orbital-target > span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border: 1px solid rgb(243 166 107 / 65%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.orbital-target::before {
+  content: '';
+  width: 105px;
+  height: 105px;
+}
+.orbital-target::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  background: var(--color-brand);
+}
+.orbital-target > span:nth-child(1) {
+  width: 32px;
+  height: 32px;
+}
+.orbital-target > span:nth-child(2) {
+  width: 160px;
+  height: 160px;
+  opacity: 0.2;
+  animation: orbit-pulse 5s ease-out infinite;
+}
+.orbital-target > span:nth-child(3) {
+  display: none;
+}
+@keyframes orbit-pulse {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  50% {
+    opacity: 0.35;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+@media (max-width: 640px) {
+  .hero-shade {
+    background:
+      linear-gradient(90deg, rgb(6 11 17 / 88%), rgb(6 11 17 / 33%)),
+      linear-gradient(0deg, var(--color-space), transparent 65%);
+  }
+}

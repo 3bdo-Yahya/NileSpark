@@ -1,0 +1,53 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Data (keep structure; ignore bulk)
+data/raw/**
+!data/raw/.gitkeep
+data/processed/**
+!data/processed/.gitkeep
+data/archives/**
+!data/archives/.gitkeep
+*.zip
+*.parquet
+*.duckdb
+
+# Hackathon reference PDFs (local only; not product code)
+*.pdf
+docs/hackathon/*.pdf
+
+# Keep tiny fixtures for tests
+!data/fixtures/
+!tests/fixtures/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+.claude/
+.cursor/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.next/
+
+# Logs
+*.log
+
