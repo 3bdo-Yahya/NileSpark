@@ -37,27 +37,38 @@ export function boundsMatch(draft: CoordinateDraft, bounds: Bounds | null): bool
   )
 }
 function validDate(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number(value.slice(0, 4)) < 1) return false
   const date = new Date(`${value}T00:00:00Z`)
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value
 }
-export function validateQuery(query: AnalysisQuery): string | null {
+export function validateQuery(
+  query: AnalysisQuery,
+  connection: 'demo' | 'api' = 'demo',
+): string | null {
   const boundsError = validateBounds(query.bounds)
   if (boundsError) return boundsError
   if (!validDate(query.from) || !validDate(query.to)) return 'Choose a valid start and end date.'
   if (query.from > query.to) return 'The start date must be on or before the end date.'
-  if (query.from < DEMO_FROM || query.to > DEMO_TO)
+  if (connection === 'demo' && (query.from < DEMO_FROM || query.to > DEMO_TO))
     return 'The synthetic demo supports 2022–2025. This is not a statement of NASA data availability.'
+  const monthCount =
+    (Number(query.to.slice(0, 4)) - Number(query.from.slice(0, 4))) * 12 +
+    Number(query.to.slice(5, 7)) -
+    Number(query.from.slice(5, 7)) +
+    1
+  if (monthCount > 120)
+    return 'Choose up to 120 months per request. This is an interface limit, not a data-availability limit.'
   return null
 }
 export function periodsBetween(from: string, to: string): string[] {
   const start = new Date(`${from.slice(0, 7)}-01T00:00:00Z`)
   const end = to.slice(0, 7)
   const periods: string[] = []
-  for (let i = 0; i < 48; i++) {
+  for (let i = 0; i < 120; i++) {
     const period = start.toISOString().slice(0, 7)
     if (period > end) break
     periods.push(period)
+    if (period === end) break
     start.setUTCMonth(start.getUTCMonth() + 1)
   }
   return periods

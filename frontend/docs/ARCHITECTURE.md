@@ -4,39 +4,41 @@ Dependency direction: app → features → shared UI. Shared controls do not imp
 
 ```text
 src/
-  app/                       hash routes, Home, route boundary
-  components/ui/             Button, Dialog, Badge, Surface, TextField
-  features/
-    explorer/
-      Explorer.tsx           view composition
-      useExplorer.ts         state/request orchestration
-      components/            controls, map, calendar, details
-      model/                 typed model, bounds/date validation
-      services/              synthetic adapter, CSV export
-    method/                  science limitations dialog
-    foundations/             design-system gallery
-  styles/                    Tailwind v4 tokens, fonts, shared styles
-public/
-  images/                    responsive concept artwork
-  licenses/                  fonts, icons, map notices
+  app/                         routes, Home, route boundary
+  components/ui/               typed UI primitives
+  lib/api/
+    client.ts                  HTTP/envelopes, timeout, cancellation, errors
+    config.ts                  public VITE_API_BASE_URL configuration
+  features/explorer/
+    Explorer.tsx               composition and connection controls
+    useExplorer.ts             query/calendar/export state and cancellation
+    useApiMap.ts               independently cancellable monthly map request
+    components/                controls, map, calendar, details, methodology dialog
+    model/                     typed model, validation, raw/harmonized projection
+    services/apiAnalysis.ts    wire decoding and clipped month requests
+    services/demoAnalysis.ts   isolated synthetic fixture
+    services/exportCsv.ts      browser download helper and demo CSV
+  features/method/             demo limitations dialog
+  features/foundations/        design-system gallery
+  styles/                      Tailwind tokens, fonts, shared styles
 ```
 
-## Boundaries and state
+## Data boundaries
 
-Keep map/calendar/analysis in one implemented feature. No empty layers, dependency injection or global store are needed. Model/services have no React imports. Components accept typed values and callbacks. MapCanvas owns MapLibre, layers, popups, resize and cleanup.
+API and synthetic results are distinct types with provenance. The HTTP client is injectable for tests and has no Vite dependency. The wire adapter validates envelopes, dates, month uniqueness, numbers and GeoJSON cell centroids. API placeholders cannot become observed zeros. Missing months and raw sensor keys remain null. No synthetic fallback is performed on network failure.
 
-The synthetic adapter accepts AbortSignal. The hook aborts on query changes, cancel and unmount; request identity prevents stale updates. Query changes clear old results, selected month, playback and errors. Calendar and selected-month map records derive from one result. Inclusive dates use UTC; null is unavailable, 0 is explicit generated zero.
+Calendar display projects raw_by_sensor for the selected API sensor or the reported harmonized value. API map and CSV are all-sensor endpoints; the raw calendar selector does not alter their meaning. Both use the same inclusive, month-clipped date helper. Demo-specific NOAA-20 labels do not leak into API family labels.
 
-Manual coordinate edits must be applied. Validation rejects blank, reversed and zero-area bounds: longitude ±180°, latitude ±85°, west < east, south < north. Dateline crossing is unsupported. The fixture supports 2022–2025 only.
+Query changes abort work and clear stale values. Request identity guards calendar/export responses; map state is keyed by result, month and retry attempt so older layers cannot flash under new inputs. Map failure has independent retry and does not erase a successful calendar. Methodology loads on dialog open and aborts when it closes.
 
-AnalysisAdapter describes the current fixture, not an agreed backend contract. A future adapter must convert real payloads and expose approved metric/unit, sensor, coverage, processing version and limits. No FIRMS fetch or credential belongs in a UI component.
+Model/service modules have no React imports. MapCanvas exclusively owns MapLibre, sources, layers, popups, resize and cleanup. Synthetic detections and API cell counts are separate layers. No extra global store or dependency-injection framework is needed.
 
-## Performance and cleanup
+## Performance and limits
 
-Home is the entry route. Explorer and MapLibre load on demand; the worker is separate. GeoJSON WebGL layers avoid individual DOM markers. Resize refits the AOI; changing month/query closes stale popups. Cleanup removes map instances, listeners, observers, requests and playback timers.
+Home is the entry route. DeferredExplorer loads and caches the Explorer route with explicit loading/error handling. LazyMapCanvas then loads MapLibre independently, reserving layout space and containing failed map-code downloads. Its worker remains separate. GeoJSON WebGL rendering avoids one DOM element per point. Resize refits the AOI and changing selected data closes popups. All observers, timers, requests and map instances are cleaned up.
 
-Tailwind is the primary style system. Small unlayered CSS handles MapLibre controls and container positioning. Fonts and responsive WebP art are local. Motion respects reduced motion, with no animation framework or continuous 3D globe. Map bundle sizes and the remaining Vite warning are documented in VERIFICATION.md; they are not Web Vitals scores.
+Manual edits must be applied. Longitude ±180° and latitude ±85°, west < east, south < north; dateline crossing is unsupported. API requests are limited to 120 months by the UI. Slower API playback leaves headroom under the existing per-endpoint rate limit.
 
-The transitive minimatch override pins patched 11.0.1 for GHSA-g3hv-75wg-m249; lint checks compatibility. Revisit when upstream tooling adopts the patch.
+Tailwind is the primary style system; small unlayered CSS handles MapLibre integration. Local fonts and responsive WebP art remain unchanged. The substantial map chunk still triggers a Vite warning; see VERIFICATION.md. A small local loading-graph comparison is documented in E2E_AND_PERFORMANCE.md; it is not a field Web Vitals pass.
 
-Omar owns the frontend. Scientific metric/unit and harmonization remain team decisions. This milestone implements no backend or NASA ingestion.
+The minimatch override pins patched 11.0.1 for GHSA-g3hv-75wg-m249 and is checked by lint. Backend/scientific decisions and the CSV header handoff are recorded in API_INTEGRATION.md.

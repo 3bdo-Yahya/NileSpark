@@ -7,3 +7,7 @@ dist/
 *.tsbuildinfo
 .DS_Store
 coverage/
+dist-e2e/
+test-results/
+playwright-report/
+dist-perf-before/

@@ -1,45 +1,59 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { boundsMatch, parseBounds, toDraft, validateQuery } from './model/query'
+import { calendarMonths } from './model/presentation'
 import { PRESETS } from './model/types'
 import type {
-  AnalysisResult,
+  ApiSensor,
   Bounds,
+  ConnectionMode,
   DataView,
   DemoScenario,
+  ExplorerResult,
   ObservationSource,
 } from './model/types'
 import { demoAnalysis } from './services/demoAnalysis'
-import { downloadMonthCsv } from './services/exportCsv'
+import { analysisApi } from './services/api'
+import { downloadBlob, downloadMonthCsv } from './services/exportCsv'
+import { useApiMap } from './useApiMap'
 
 export function useExplorer() {
   const [bounds, setBounds] = useState<Bounds | null>({ ...PRESETS[0].bounds })
   const [draft, setDraft] = useState(toDraft(PRESETS[0].bounds))
   const [areaName, setAreaName] = useState<string>(PRESETS[0].name)
-  const [from, setFrom] = useState('2022-01-01')
-  const [to, setTo] = useState('2024-12-31')
+  const [from, setFrom] = useState('2025-01-01')
+  const [to, setTo] = useState('2025-12-31')
+  const [connection, setConnection] = useState<ConnectionMode>('api')
   const [source, setSource] = useState<ObservationSource>('VIIRS_NOAA20')
+  const [apiSensor, setApiSensor] = useState<ApiSensor>('viirs')
   const [mode, setMode] = useState<DataView>('source')
   const [scenario, setScenario] = useState<DemoScenario>('sample')
   const [drawing, setDrawing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [requestError, setRequestError] = useState<string | null>(null)
-  const [result, setResult] = useState<AnalysisResult | null>(null)
+  const [result, setResult] = useState<ExplorerResult | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const [playing, setPlaying] = useState(false)
-  const [notice, setNotice] = useState('Choose a region, then run the synthetic source demo.')
+  const [exportBusy, setExportBusy] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
+  const [notice, setNotice] = useState('Choose an area and request its calendar from the API.')
   const active = useRef<AbortController | null>(null)
+  const exportActive = useRef<AbortController | null>(null)
 
   const invalidate = useCallback(() => {
     active.current?.abort()
     active.current = null
+    exportActive.current?.abort()
+    exportActive.current = null
     setBusy(false)
+    setExportBusy(false)
+    setExportError(null)
     setResult(null)
     setSelected(null)
     setPlaying(false)
     setError(null)
     setRequestError(null)
-    setNotice('Selection changed. Run the demo to refresh the result.')
+    setNotice('Selection changed. Run the analysis to refresh the result.')
   }, [])
   const setArea = useCallback(
     (value: Bounds, name: string) => {
@@ -54,7 +68,13 @@ export function useExplorer() {
   )
   const onMapBounds = useCallback((value: Bounds) => setArea(value, 'Custom area'), [setArea])
   const onCancelDraw = useCallback(() => setDrawing(false), [])
-  useEffect(() => () => active.current?.abort(), [])
+  useEffect(
+    () => () => {
+      active.current?.abort()
+      exportActive.current?.abort()
+    },
+    [],
+  )
   useEffect(() => {
     if (!playing || !result) return
     const timer = setInterval(
@@ -63,7 +83,7 @@ export function useExplorer() {
           const index = result.months.findIndex((month) => month.period === previous)
           return result.months[(index + 1) % result.months.length]?.period ?? null
         }),
-      1100,
+      result.provenance === 'synthetic-demo' ? 1100 : 3500,
     )
     return () => clearInterval(timer)
   }, [playing, result])
@@ -76,44 +96,53 @@ export function useExplorer() {
       setError('Choose an area and apply its coordinates first.')
       return
     }
-    if (mode === 'harmonized') {
-      setError('The harmonization method is not connected. Select Source demo.')
+    if (connection === 'demo' && mode === 'harmonized') {
+      setError('Harmonization is not simulated. Select Source demo.')
       return
     }
     const query = { bounds, from, to, source }
-    const validation = validateQuery(query)
+    const validation = validateQuery(query, connection)
     if (validation) {
       setError(validation)
       return
     }
     active.current?.abort()
+    exportActive.current?.abort()
+    exportActive.current = null
+    setExportBusy(false)
+    setExportError(null)
     const controller = new AbortController()
     active.current = controller
-    const selectedScenario = override ?? scenario
     if (override) setScenario(override)
     setBusy(true)
     setResult(null)
     setSelected(null)
     setDrawing(false)
-    setNotice('Preparing the synthetic demo…')
+    setNotice(
+      connection === 'api' ? 'Requesting the API calendar…' : 'Preparing the synthetic demo…',
+    )
     try {
-      const output = await demoAnalysis.analyze(query, controller.signal, selectedScenario)
+      const output =
+        connection === 'api'
+          ? await analysisApi.calendar(query, controller.signal)
+          : await demoAnalysis.analyze(query, controller.signal, override ?? scenario)
       if (controller.signal.aborted || active.current !== controller) return
       setResult(output)
+      const values = calendarMonths(output, mode, apiSensor)
       setSelected(
-        output.months.find((month) => month.value !== null && month.value > 0)?.period ??
-          output.months[0]?.period ??
-          null,
+        values.find((month) => month.value !== null)?.period ?? output.months[0]?.period ?? null,
       )
       setNotice(
-        output.scenario === 'empty'
-          ? 'No observations are available in this synthetic fixture.'
-          : 'Synthetic demo loaded. Select a month to inspect its generated records.',
+        output.provenance === 'api-stub'
+          ? 'API connected. The server returned a placeholder; its zero values are withheld.'
+          : output.provenance === 'api'
+            ? 'API calendar received. Missing months remain unavailable. Map and CSV include all sensors.'
+            : 'Synthetic demo loaded. No NASA observations are represented.',
       )
     } catch (reason) {
       if (controller.signal.aborted || active.current !== controller) return
-      setRequestError(reason instanceof Error ? reason.message : 'The demo could not load.')
-      setNotice('The demo request failed. Your inputs are preserved.')
+      setRequestError(reason instanceof Error ? reason.message : 'The request could not complete.')
+      setNotice('Request failed. Your inputs are preserved; retry when ready.')
     } finally {
       if (active.current === controller) {
         setBusy(false)
@@ -121,18 +150,76 @@ export function useExplorer() {
       }
     }
   }
+  const months = useMemo(() => calendarMonths(result, mode, apiSensor), [result, mode, apiSensor])
   const observations = useMemo(
-    () => result?.observations.filter((record) => record.period === selected) ?? [],
-    [result, selected],
+    () =>
+      result?.provenance === 'synthetic-demo' && mode === 'source'
+        ? result.observations.filter((record) => record.period === selected)
+        : [],
+    [result, selected, mode],
   )
+  const map = useApiMap(result, selected)
 
+  async function exportMonth() {
+    if (!result || !selected) return
+    if (result.provenance === 'synthetic-demo') {
+      downloadMonthCsv(result, selected)
+      setNotice(`Downloaded DEMO CSV for ${selected}: ${observations.length} synthetic records.`)
+      return
+    }
+    exportActive.current?.abort()
+    const controller = new AbortController()
+    exportActive.current = controller
+    setExportBusy(true)
+    setExportError(null)
+    try {
+      const output = await analysisApi.exportMonth(result.query, selected, controller.signal)
+      if (controller.signal.aborted || exportActive.current !== controller) return
+      if (output.stub || result.provenance === 'api-stub') {
+        setNotice('The API export is a placeholder. No observation file was downloaded.')
+      } else if (output.stub === null) {
+        setExportError(
+          'CSV placeholder status is not readable. The API must expose X-Stub: false for an observation export.',
+        )
+      } else {
+        downloadBlob(output.blob, `burncal-API-all-sensors-${selected}.csv`)
+        setNotice(
+          `Downloaded API CSV for ${selected}, clipped to the applied dates. All sensors included.${output.rowCap ? ` Server row cap: ${output.rowCap}.` : ''}`,
+        )
+      }
+    } catch (reason) {
+      if (controller.signal.aborted || exportActive.current !== controller) return
+      setExportError(reason instanceof Error ? reason.message : 'CSV export failed.')
+    } finally {
+      if (exportActive.current === controller) {
+        exportActive.current = null
+        setExportBusy(false)
+      }
+    }
+  }
+  const cancelExport = () => {
+    if (!exportActive.current) return
+    exportActive.current?.abort()
+    exportActive.current = null
+    setExportBusy(false)
+    setNotice('CSV request cancelled.')
+  }
+  const selectPeriod = (period: string) => {
+    cancelExport()
+    setExportError(null)
+    setSelected(period)
+    setPlaying(false)
+    setNotice(`Selected ${period}. Map and export use this month within the applied dates.`)
+  }
   return {
     bounds,
     draft,
     areaName,
     from,
     to,
+    connection,
     source,
+    apiSensor,
     mode,
     scenario,
     drawing,
@@ -140,10 +227,14 @@ export function useExplorer() {
     error,
     requestError,
     result,
+    months,
     selected,
     playing,
     notice,
     observations,
+    map,
+    exportBusy,
+    exportError,
     unapplied: !boundsMatch(draft, bounds) && bounds !== null,
     onMapBounds,
     onCancelDraw,
@@ -172,9 +263,20 @@ export function useExplorer() {
       invalidate()
       setSource(value)
     },
-    onMode: (value: DataView) => {
+    onApiSensor: (value: ApiSensor) => {
+      setApiSensor(value)
+      setPlaying(false)
+    },
+    onConnection: (value: ConnectionMode) => {
       invalidate()
+      setConnection(value)
+      setMode('source')
+      setDrawing(false)
+    },
+    onMode: (value: DataView) => {
+      setPlaying(false)
       setMode(value)
+      setError(null)
     },
     onScenario: (value: DemoScenario) => {
       invalidate()
@@ -190,28 +292,27 @@ export function useExplorer() {
       setDraft(toDraft(null))
       setAreaName('Choose a region')
       setDrawing(false)
-      setNotice('Area cleared. Draw a new rectangle or enter coordinates.')
+      setNotice('Area cleared. Draw a rectangle or enter coordinates.')
     },
     onCancel: () => {
       invalidate()
-      setNotice('Demo request cancelled.')
+      setNotice('Request cancelled.')
     },
     onAnalyze: () => {
       void analyze()
     },
     onRetry: () => {
-      void analyze('sample')
+      void analyze(connection === 'demo' ? 'sample' : undefined)
     },
-    onSelect: (period: string) => {
-      setSelected(period)
-      setPlaying(false)
+    onSelect: selectPeriod,
+    onPlay: () => {
+      cancelExport()
+      setPlaying((value) => !value)
     },
-    onPlay: () => setPlaying((value) => !value),
     onExport: () => {
-      if (result && selected) {
-        downloadMonthCsv(result, selected)
-        setNotice(`Downloaded DEMO CSV for ${selected}: ${observations.length} synthetic records.`)
-      }
+      setPlaying(false)
+      void exportMonth()
     },
+    onCancelExport: cancelExport,
   }
 }

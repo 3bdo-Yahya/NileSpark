@@ -1,10 +1,10 @@
 import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
 import { Home } from './Home'
+import { DeferredExplorer } from './DeferredExplorer'
 import { RouteBoundary } from './RouteBoundary'
 import { MethodDialog } from '../features/method/MethodDialog'
 import { ButtonLink } from '../components/ui/Button'
 
-const Explorer = lazy(() => import('../features/explorer/Explorer'))
 const Foundations = lazy(() => import('../features/foundations/Foundations'))
 function subscribe(callback: () => void) {
   window.addEventListener('hashchange', callback)
@@ -47,7 +47,7 @@ export function App() {
           {route === 'home' ? (
             <Home onOpenMethod={() => setMethodOpen(true)} />
           ) : route === 'explore' ? (
-            <Explorer onOpenMethod={() => setMethodOpen(true)} />
+            <DeferredExplorer onOpenMethod={() => setMethodOpen(true)} />
           ) : (
             <main id="main" tabIndex={-1}>
               <header className="section-shell flex justify-between gap-4 border-b border-stroke py-5">

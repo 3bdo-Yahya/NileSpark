@@ -3,7 +3,14 @@ import { Button } from '../../../components/ui/Button'
 import { TextField } from '../../../components/ui/TextField'
 import { coordinateKeys, DEMO_FROM, DEMO_TO } from '../model/query'
 import { PRESETS } from '../model/types'
-import type { Bounds, CoordinateDraft, DataView, ObservationSource } from '../model/types'
+import type {
+  ApiSensor,
+  Bounds,
+  ConnectionMode,
+  CoordinateDraft,
+  DataView,
+  ObservationSource,
+} from '../model/types'
 
 type Props = {
   areaName: string
@@ -12,6 +19,8 @@ type Props = {
   from: string
   to: string
   source: ObservationSource
+  connection: ConnectionMode
+  apiSensor: ApiSensor
   mode: DataView
   drawing: boolean
   busy: boolean
@@ -22,6 +31,7 @@ type Props = {
   onApply: () => void
   onDate: (key: 'from' | 'to', value: string) => void
   onSource: (source: ObservationSource) => void
+  onApiSensor: (source: ApiSensor) => void
   onMode: (mode: DataView) => void
   onDraw: () => void
   onReset: () => void
@@ -112,7 +122,7 @@ export function StudyControls(p: Props) {
               </Button>
               {p.unapplied && (
                 <p className="text-caption text-warning">
-                  Apply the edited coordinates before running the demo.
+                  Apply the edited coordinates before running the analysis.
                 </p>
               )}
             </form>
@@ -124,34 +134,56 @@ export function StudyControls(p: Props) {
                 label="From"
                 type="date"
                 value={p.from}
-                min={DEMO_FROM}
-                max={DEMO_TO}
+                min={p.connection === 'demo' ? DEMO_FROM : undefined}
+                max={p.connection === 'demo' ? DEMO_TO : undefined}
                 onChange={(event) => p.onDate('from', event.target.value)}
               />
               <TextField
                 label="To"
                 type="date"
                 value={p.to}
-                min={DEMO_FROM}
-                max={DEMO_TO}
+                min={p.connection === 'demo' ? DEMO_FROM : undefined}
+                max={p.connection === 'demo' ? DEMO_TO : undefined}
                 onChange={(event) => p.onDate('to', event.target.value)}
               />
             </div>
             <p className="mt-3 text-caption text-muted">
-              Synthetic demo: 2022–2025. Dates are inclusive, in UTC.
+              {p.connection === 'demo'
+                ? 'Synthetic demo: 2022–2025.'
+                : 'API request: up to 120 months; data coverage is not guaranteed.'}{' '}
+              Dates are inclusive, in UTC.
             </p>
             <label className="eyebrow mt-5 block" htmlFor="observation-source">
-              Source / demo only
+              {p.connection === 'demo' ? 'Source / demo only' : 'Raw calendar sensor'}
             </label>
             <select
               id="observation-source"
-              value={p.source}
+              value={p.connection === 'demo' ? p.source : p.apiSensor}
               className={selectClass}
-              onChange={(event) => p.onSource(event.target.value as ObservationSource)}
+              onChange={(event) =>
+                p.connection === 'demo'
+                  ? p.onSource(event.target.value as ObservationSource)
+                  : p.onApiSensor(event.target.value as ApiSensor)
+              }
             >
-              <option value="VIIRS_NOAA20">VIIRS NOAA-20 · demo</option>
-              <option value="MODIS">MODIS · demo</option>
+              {p.connection === 'demo' ? (
+                <>
+                  <option value="VIIRS_NOAA20">VIIRS NOAA-20 · demo</option>
+                  <option value="MODIS">MODIS · demo</option>
+                </>
+              ) : (
+                <>
+                  <option value="viirs">VIIRS · API family</option>
+                  <option value="modis">MODIS · API family</option>
+                </>
+              )}
             </select>
+            {p.connection === 'api' && (
+              <p className="mt-2 text-caption text-muted">
+                Changes the raw calendar display only. Map cells and CSV include all sensors; static
+                detections are excluded.
+              </p>
+            )}
           </div>
           <fieldset className="min-w-0 border-t border-stroke pt-5">
             <legend className="eyebrow pt-4">Data view</legend>
@@ -166,7 +198,13 @@ export function StudyControls(p: Props) {
                     onChange={() => p.onMode(mode)}
                   />
                   <span className="flex min-h-11 items-center rounded-lg border border-stroke-strong px-3 text-caption peer-checked:border-brand peer-checked:bg-brand peer-checked:text-on-brand peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-focus">
-                    {mode === 'source' ? 'Source demo' : 'Harmonized · pending'}
+                    {p.connection === 'demo'
+                      ? mode === 'source'
+                        ? 'Source demo'
+                        : 'Harmonized · pending'
+                      : mode === 'source'
+                        ? 'Raw (API)'
+                        : 'Harmonized (API)'}
                   </span>
                 </label>
               ))}
@@ -184,9 +222,15 @@ export function StudyControls(p: Props) {
             className="w-full"
             onClick={p.onAnalyze}
             loading={p.busy}
-            disabled={!p.bounds || p.unapplied || p.mode === 'harmonized'}
+            disabled={
+              !p.bounds || p.unapplied || (p.connection === 'demo' && p.mode === 'harmonized')
+            }
           >
-            {p.busy ? 'Preparing demo…' : 'Run source demo →'}
+            {p.busy
+              ? 'Loading…'
+              : p.connection === 'api'
+                ? 'Load API calendar →'
+                : 'Run source demo →'}
           </Button>
           {p.busy && (
             <Button className="w-full" variant="ghost" size="sm" onClick={p.onCancel}>
@@ -194,9 +238,11 @@ export function StudyControls(p: Props) {
             </Button>
           )}
           <p className="text-caption text-muted">
-            {p.mode === 'harmonized'
-              ? 'Scientific metric, unit and harmonization are not connected.'
-              : 'All generated records are synthetic. No NASA analysis is requested.'}
+            {p.connection === 'api'
+              ? 'API placeholder flags are shown explicitly. Missing values are never converted to zero.'
+              : p.mode === 'harmonized'
+                ? 'Scientific metric, unit and harmonization are not connected.'
+                : 'All generated records are synthetic. No NASA analysis is requested.'}
           </p>
         </div>
       </details>

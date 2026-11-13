@@ -19,10 +19,13 @@ export function makeMonthCsv(result: AnalysisResult, period: string): string {
 }
 export function downloadMonthCsv(result: AnalysisResult, period: string): void {
   const blob = new Blob([makeMonthCsv(result, period)], { type: 'text/csv;charset=utf-8' })
+  downloadBlob(blob, `burncal-DEMO-${result.query.source}-${period}.csv`)
+}
+export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = url
-  anchor.download = `burncal-DEMO-${result.query.source}-${period}.csv`
+  anchor.download = filename
   anchor.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
