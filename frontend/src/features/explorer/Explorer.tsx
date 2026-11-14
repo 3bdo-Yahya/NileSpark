@@ -62,7 +62,7 @@ export default function Explorer({ onOpenMethod }: { onOpenMethod: () => void })
             </>
           ) : (
             <>
-              <strong>API mode.</strong> Calendar values come from the server. Map and CSV cover all
+              <strong>API mode.</strong> Calendar values come from the server. CSV covers all
               sensors. Coverage and units depend on the API response.
             </>
           )}
@@ -145,7 +145,7 @@ export default function Explorer({ onOpenMethod }: { onOpenMethod: () => void })
                   ) : state.map.data?.stub ? (
                     'Map endpoint returned a placeholder; no observation cells are shown.'
                   ) : state.map.data ? (
-                    `${state.map.data.cells.features.length} API cell centroids · all sensors · ${state.selected}. Empty geometry alone does not establish coverage or no activity.`
+                    `${state.map.data.cells.features.length} fire-day cells · VIIRS where available, otherwise MODIS · ${state.selected}. Empty geometry alone does not establish coverage or no activity.`
                   ) : (
                     'Load a calendar to request its selected month’s map cells.'
                   )}

@@ -5,6 +5,10 @@ Run: uvicorn api.main:app --reload --port 8000
 
 from __future__ import annotations
 
+import csv
+import io
+import json
+import logging
 from datetime import date
 
 from fastapi import FastAPI, Query, Request
@@ -14,7 +18,9 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from api.schemas import CalendarData, CalendarRequest, Envelope, MonthStat, YearStat
+from api.schemas import BBoxAoi, CalendarRequest, Envelope
+from pipeline.aoi import CSV_ROW_CAP, calendar_for_bbox, hotspot_rows, map_cells
+from pipeline.paths import ProductsMissing
 from pipeline.paths import FACTORS_JSON
 
 limiter = Limiter(key_func=get_remote_address)
@@ -35,6 +41,7 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ],
+    expose_headers=["X-Stub", "X-Truncated", "X-Row-Cap", "Content-Disposition"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -65,52 +72,25 @@ def health(request: Request):
 @app.post("/api/calendar")
 @limiter.limit("30/minute")
 def calendar(request: Request, body: CalendarRequest):
-    """Return harmonized monthly/yearly series for an AOI.
-
-    Ali: query monthly.parquet filtered by bbox/polygon + date range.
-    Stub returns empty series so Omar can wire the UI shape tonight.
-    """
-    _ = body  # unused until DuckDB wiring
-    data = CalendarData(
-        months=[
-            MonthStat(
-                year=2025,
-                month=3,
-                value=0.0,
-                raw_by_sensor={"modis": 0.0, "viirs": 0.0},
-                median=None,
-                anomaly=None,
-                anomaly_pct=None,
-            )
-        ],
-        years=[YearStat(year=2025, value=0.0)],
-    )
-    return ok(
-        data.model_dump(),
-        meta={
-            "k": None,
-            "baseline_years": [],
-            "method_version": "v1",
-            "country_hint": "Egypt",
-            "stub": True,
-        },
-    )
+    if not isinstance(body.aoi, BBoxAoi):
+        return fail("Select a bounding box. Polygon queries are not supported yet.", 422)
+    data, meta = calendar_for_bbox(tuple(body.aoi.bbox), body.start, body.end)
+    return ok(data, meta)
 
 
 @app.post("/api/hotspots.csv")
 @limiter.limit("10/minute")
 def hotspots_csv(request: Request, body: CalendarRequest):
-    """Stream hotspot CSV for the search. Ali: read hotspots.parquet."""
-    _ = body
-    header = (
-        "sensor,satellite,country,acq_date,acq_time,lat,lon,frp,"
-        "conf_norm,type,daynight,brightness\n"
-    )
-    return PlainTextResponse(
-        content=header,
-        media_type="text/csv",
-        headers={"X-Row-Cap": "100000", "X-Stub": "true"},
-    )
+    if not isinstance(body.aoi, BBoxAoi):
+        return fail("Select a bounding box. Polygon queries are not supported yet.", 422)
+    columns, rows, truncated = hotspot_rows(tuple(body.aoi.bbox), body.start, body.end)
+    buffer = io.StringIO(newline="")
+    writer = csv.writer(buffer)
+    writer.writerow(columns)
+    writer.writerows(rows)
+    return PlainTextResponse(buffer.getvalue(), media_type="text/csv", headers={
+        "X-Stub": "false", "X-Truncated": str(truncated).lower(), "X-Row-Cap": str(CSV_ROW_CAP)
+    })
 
 
 @app.get("/api/map")
@@ -125,44 +105,31 @@ def map_layer(
     end: date = Query(...),
     include_static: bool = Query(False),
 ):
-    """GeoJSON cell counts for the heat/map layer."""
-    if min_lon >= max_lon or min_lat >= max_lat:
-        return fail("invalid bbox")
-    if start > end:
-        return fail("start must be on or before end")
-    _ = include_static
-    return ok(
-        {
-            "type": "FeatureCollection",
-            "features": [],
-        },
-        meta={"stub": True},
-    )
+    data, meta = map_cells((min_lon, min_lat, max_lon, max_lat), start, end)
+    return ok(data, meta)
 
 
 @app.get("/api/methodology")
 @limiter.limit("60/minute")
 def methodology(request: Request):
-    """Factors + plain-language explanation for the UI panel."""
-    if FACTORS_JSON.exists():
-        import json
+    if not FACTORS_JSON.is_file():
+        raise ProductsMissing("Build the processed data before requesting methodology.")
+    payload = json.loads(FACTORS_JSON.read_text(encoding="utf-8"))
+    payload.pop("countries", None)
+    return ok(payload, {"stub": False})
 
-        payload = json.loads(FACTORS_JSON.read_text(encoding="utf-8"))
-        return ok(payload)
 
-    return ok(
-        {
-            "method_version": "v1",
-            "grid_deg": 0.01,
-            "overlap_years": [],
-            "global_k": None,
-            "countries": {},
-            "plain_language": (
-                "We count fires as ~1 km cell-days, then scale older MODIS "
-                "counts by k so they match VIIRS sensitivity. "
-                "(Stub — factors.json not built yet.)"
-            ),
-            "stub": True,
-        }
-    )
+@app.exception_handler(ProductsMissing)
+async def missing_products(request, exc):
+    return fail(str(exc), 503)
 
+
+@app.exception_handler(ValueError)
+async def invalid_query(request, exc):
+    return fail(str(exc), 400)
+
+
+@app.exception_handler(Exception)
+async def internal_error(request, exc):
+    logging.getLogger(__name__).exception("API request failed")
+    return fail("Unable to read processed data.", 500)

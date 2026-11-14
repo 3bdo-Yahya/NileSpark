@@ -156,7 +156,7 @@ export const journeys = [
       await button(d, 'January 2025: 10 API value').waitFor({ state: 'visible' })
       await button(d, 'Retry map layer').press('Enter')
       await d
-        .getByText('1 API cell centroids · all sensors · 2025-01.', { exact: false })
+        .getByText('1 fire-day cells · VIIRS where available, otherwise MODIS · 2025-01.', { exact: false })
         .waitFor({ state: 'visible' })
     },
   },

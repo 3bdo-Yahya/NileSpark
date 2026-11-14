@@ -245,7 +245,7 @@ export function MapCanvas(p: Props) {
         popupRef.current = new Popup()
           .setLngLat([lng, lat])
           .setText(
-            `API CELL COUNT: ${String(feature.properties?.count)} · all sensors · ${live.current.period ?? 'month not selected'}`,
+            `FIRE DAYS: ${String(feature.properties?.count)} ·  ${live.current.period ?? 'month not selected'}`,
           )
           .addTo(current)
       })
@@ -348,7 +348,7 @@ export function MapCanvas(p: Props) {
         <span
           className={`ml-4 mr-2 inline-block size-2 rounded-full ${p.connection === 'demo' ? 'bg-brand' : 'bg-focus'}`}
         />
-        {p.connection === 'demo' ? 'Demo record' : 'API cell · all sensors'}
+        {p.connection === 'demo' ? 'Demo record' : 'Fire days per cell'}
       </div>
     </div>
   )

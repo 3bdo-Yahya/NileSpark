@@ -136,7 +136,7 @@ export function useExplorer() {
         output.provenance === 'api-stub'
           ? 'API connected. The server returned a placeholder; its zero values are withheld.'
           : output.provenance === 'api'
-            ? 'API calendar received. Missing months remain unavailable. Map and CSV include all sensors.'
+            ? 'API calendar received. Missing months remain unavailable. CSV includes all sensors.'
             : 'Synthetic demo loaded. No NASA observations are represented.',
       )
     } catch (reason) {
