@@ -196,7 +196,6 @@ export default function Explorer({ onOpenMethod }: { onOpenMethod: () => void })
       </div>
       <footer className="mt-8 flex flex-wrap justify-between gap-3 border-t border-stroke pt-5 text-caption text-muted">
         <p>NileSpark / BurnCal · demonstration interface</p>
-        <a href="#/foundations">Interface foundations ↗</a>
       </footer>
       <ApiMethodDialog open={methodOpen} onClose={() => setMethodOpen(false)} />
     </main>

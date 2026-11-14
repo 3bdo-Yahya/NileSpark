@@ -37,7 +37,7 @@ The current API returns placeholders. The frontend explicitly shows API placehol
 - Selected-month map cell centroids and CSV clipped to the applied dates, all sensors, static detections excluded.
 - Source/methodology dialog fetched from the server, with loading/error/retry.
 - Request cancellation, timeout, readable errors, independent map retry and preserved inputs.
-- Responsive layout, local fonts, visible focus, reduced motion and UI gallery at #/foundations.
+- Responsive layout, local fonts, visible focus, reduced motion.
 
 A dash means no supplied value, not zero. No scientific unit or color scale is assumed. Map and CSV have no sensor filter in the current contract. CSV requires readable X-Stub provenance headers; see docs/API_INTEGRATION.md for backend handoff details.
 

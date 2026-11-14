@@ -5,7 +5,7 @@ import { MethodDialog } from '../features/method/MethodDialog'
 import { ButtonLink } from '../components/ui/Button'
 
 const Explorer = lazy(() => import('../features/explorer/Explorer'))
-const Foundations = lazy(() => import('../features/foundations/Foundations'))
+const Foundations = () => null
 function subscribe(callback: () => void) {
   window.addEventListener('hashchange', callback)
   return () => window.removeEventListener('hashchange', callback)
