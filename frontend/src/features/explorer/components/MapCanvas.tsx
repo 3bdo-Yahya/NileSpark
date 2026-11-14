@@ -5,7 +5,7 @@ import type { FeatureCollection, Point, Polygon } from 'geojson'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { Button } from '../../../components/ui/Button'
-import type { Bounds, DemoObservation } from '../model/types'
+import type { Bounds, ConnectionMode, DemoObservation } from '../model/types'
 import { validateBounds } from '../model/query'
 import './map.css'
 
@@ -66,6 +66,9 @@ type Props = {
   bounds: Bounds | null
   drawing: boolean
   observations: DemoObservation[]
+  connection: ConnectionMode
+  cells: FeatureCollection<Point, { count: number }> | null
+  period: string | null
   onBounds: (bounds: Bounds) => void
   onCancelDraw: () => void
 }
@@ -96,7 +99,7 @@ export function MapCanvas(p: Props) {
     try {
       map = new LibreMap({
         container: container.current,
-        style: 'https://tiles.openfreemap.org/styles/dark',
+        style: import.meta.env.VITE_MAP_STYLE_URL || 'https://tiles.openfreemap.org/styles/dark',
         center: [32, 25],
         zoom: 5.4,
         attributionControl: { compact: true },
@@ -154,6 +157,18 @@ export function MapCanvas(p: Props) {
           },
         })
         current.addSource('draw-corner', { type: 'geojson', data: empty })
+        current.addSource('api-cells', { type: 'geojson', data: live.current.cells ?? empty })
+        current.addLayer({
+          id: 'api-cell-points',
+          type: 'circle',
+          source: 'api-cells',
+          paint: {
+            'circle-color': '#91D9DF',
+            'circle-radius': 7,
+            'circle-stroke-color': '#F7F5EF',
+            'circle-stroke-width': 1,
+          },
+        })
         current.addLayer({
           id: 'draw-corner-point',
           type: 'circle',
@@ -220,6 +235,20 @@ export function MapCanvas(p: Props) {
           /* Loading feedback is handled by the timeout; individual tile errors are not a fatal analysis error. */
         }
       })
+      current.on('click', 'api-cell-points', (event) => {
+        if (live.current.drawing || !event.features?.[0]) return
+        const feature = event.features[0]
+        if (feature.geometry.type !== 'Point') return
+        const [lng, lat] = feature.geometry.coordinates
+        if (lng === undefined || lat === undefined) return
+        popupRef.current?.remove()
+        popupRef.current = new Popup()
+          .setLngLat([lng, lat])
+          .setText(
+            `API CELL COUNT: ${String(feature.properties?.count)} · all sensors · ${live.current.period ?? 'month not selected'}`,
+          )
+          .addTo(current)
+      })
       resize = new ResizeObserver(() => {
         current.resize()
         if (current.getSource('selected-area') && !live.current.drawing)
@@ -254,6 +283,12 @@ export function MapCanvas(p: Props) {
     if (map?.getSource('demo-records')) updateSource(map, 'demo-records', pointData(p.observations))
   }, [p.observations])
   useEffect(() => {
+    popupRef.current?.remove()
+    popupRef.current = null
+    const map = mapRef.current
+    if (map?.getSource('api-cells')) updateSource(map, 'api-cells', p.cells ?? empty)
+  }, [p.cells, p.period])
+  useEffect(() => {
     const map = mapRef.current
     if (map) map.getCanvas().style.cursor = p.drawing ? 'crosshair' : ''
     if (!p.drawing) {
@@ -269,7 +304,7 @@ export function MapCanvas(p: Props) {
     return () => window.removeEventListener('keydown', cancel)
   }, [])
   return (
-    <div className="relative min-h-[450px] overflow-hidden rounded-panel border border-stroke bg-space lg:min-h-[540px]">
+    <div className="relative min-h-[450px] flex-1 overflow-hidden rounded-panel border border-stroke bg-space lg:min-h-[540px]">
       <div
         ref={container}
         className="burncal-map absolute inset-0"
@@ -285,7 +320,9 @@ export function MapCanvas(p: Props) {
             ? 'Loading the geographic basemap…'
             : p.drawing
               ? 'Drawing · choose two opposite corners'
-              : 'Real geography · synthetic demo points'}
+              : p.connection === 'demo'
+                ? 'Real geography · synthetic demo points'
+                : 'Geographic basemap · API cell centroids'}
       </div>
       {status === 'failed' && (
         <div className="absolute inset-0 z-20 grid place-content-center gap-4 bg-space/95 p-8 text-center">
@@ -308,8 +345,10 @@ export function MapCanvas(p: Props) {
       <div className="pointer-events-none absolute bottom-10 left-3 z-10 rounded-lg border border-stroke bg-panel/95 px-3 py-2 text-caption text-secondary">
         <span className="mr-2 inline-block h-3 w-4 border border-dashed border-brand bg-brand/10" />
         Selected AOI
-        <span className="ml-4 mr-2 inline-block size-2 rounded-full bg-brand" />
-        Demo record
+        <span
+          className={`ml-4 mr-2 inline-block size-2 rounded-full ${p.connection === 'demo' ? 'bg-brand' : 'bg-focus'}`}
+        />
+        {p.connection === 'demo' ? 'Demo record' : 'API cell · all sensors'}
       </div>
     </div>
   )

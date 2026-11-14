@@ -1,20 +1,25 @@
 import { Pause, Play } from 'lucide-react'
+import { useEffect, useRef } from 'react'
+import type { KeyboardEvent } from 'react'
 import { Button } from '../../../components/ui/Button'
 import { periodLabel } from '../model/query'
-import type { AnalysisResult, DataView } from '../model/types'
+import type { ConnectionMode, DataView, MonthValue } from '../model/types'
+import { adjacentPeriod, revealCalendarMonth } from './calendarNavigation'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-function cellColor(value: number | null | undefined): string {
+function cellColor(value: number | null | undefined, demo: boolean): string {
   if (value == null) return 'border-dashed border-stroke bg-space text-muted'
-  if (value === 0) return 'border-stroke bg-control text-secondary'
+  if (!demo || value === 0) return 'border-stroke bg-control text-secondary'
   if (value <= 5) return 'border-[#6D5140] bg-[#4C3C32] text-paper'
   if (value <= 10) return 'border-[#A57350] bg-[#865B3E] text-paper'
   return 'border-brand bg-brand text-on-brand'
 }
 type Props = {
-  result: AnalysisResult | null
+  months: MonthValue[]
+  loaded: boolean
   from: string
   to: string
+  connection: ConnectionMode
   mode: DataView
   selected: string | null
   busy: boolean
@@ -22,11 +27,62 @@ type Props = {
   onSelect: (period: string) => void
   onPlay: () => void
 }
-
 export function ActivityCalendar(p: Props) {
-  const start = Math.min(2025, Math.max(2022, Number(p.from.slice(0, 4)) || 2024))
-  const end = Math.min(2025, Math.max(start, Number(p.to.slice(0, 4)) || start))
+  const start = Math.min(9999, Math.max(1, Number(p.from.slice(0, 4)) || 2025))
+  const end = Math.min(9999, start + 10, Math.max(start, Number(p.to.slice(0, 4)) || start))
   const years = Array.from({ length: end - start + 1 }, (_, index) => start + index)
+  const demo = p.connection === 'demo'
+  const playable = p.months.some((month) => month.value !== null)
+  const gridRef = useRef<HTMLTableElement>(null)
+  const focusPeriod = p.months.some((month) => month.period === p.selected)
+    ? p.selected
+    : p.months[0]?.period
+
+  // Keyboard navigation within the calendar grid
+  const onKeyDown = (event: KeyboardEvent<HTMLTableElement>) => {
+    if (!p.loaded || p.busy) return
+    if (
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      !['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'].includes(event.key)
+    )
+      return
+    const target = event.target
+    if (!(target instanceof HTMLButtonElement)) return
+    const period = target.getAttribute('data-period')
+    if (!period) return
+
+    const allPeriods = p.months.map((m) => m.period)
+    event.preventDefault()
+    const nextPeriod = adjacentPeriod(allPeriods, period, event.key)
+    if (nextPeriod) {
+      const nextButton = gridRef.current?.querySelector(
+        `[data-period="${nextPeriod}"]`,
+      ) as HTMLButtonElement | null
+      if (nextButton && !nextButton.disabled) {
+        nextButton.focus()
+        p.onSelect(nextPeriod)
+      }
+    }
+  }
+
+  // Keep overflowed months visible without scrolling the page or stealing focus.
+  const scrollRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!p.selected || !scrollRef.current) return
+    const btn = scrollRef.current.querySelector(
+      `[data-period="${p.selected}"][aria-pressed="true"]`,
+    ) as HTMLElement | null
+    if (btn) {
+      revealCalendarMonth(
+        scrollRef.current,
+        btn,
+        matchMedia('(prefers-reduced-motion: reduce)').matches,
+      )
+    }
+  }, [p.selected])
+
   return (
     <section
       className="min-w-0 rounded-panel border border-stroke bg-panel p-4 sm:p-6"
@@ -40,26 +96,34 @@ export function ActivityCalendar(p: Props) {
             Every month, a different signal.
           </h2>
           <p className="mt-2 text-label text-muted">
-            {p.mode === 'harmonized'
-              ? 'Metric and unit await scientific approval.'
-              : 'Synthetic records per month · one demo source at a time.'}
+            {demo
+              ? p.mode === 'harmonized'
+                ? 'Metric and unit await scientific approval.'
+                : 'Synthetic records per month · one demo source at a time.'
+              : `API calendar · ${p.mode === 'source' ? 'raw sensor values' : 'reported harmonized values'}`}
           </p>
         </div>
         <Button
           size="sm"
           variant="secondary"
           onClick={p.onPlay}
-          disabled={!p.result || p.mode === 'harmonized'}
+          disabled={!playable || p.busy}
           startIcon={p.playing ? <Pause /> : <Play />}
         >
           {p.playing ? 'Pause season' : 'Play season'}
         </Button>
       </div>
-      <div className="max-w-full overflow-x-auto pb-2">
-        <table className="w-full min-w-[720px] table-fixed border-separate border-spacing-1.5">
+      <div className="max-w-full overflow-x-auto pb-2" ref={scrollRef}>
+        <table
+          ref={gridRef}
+          className="w-full min-w-[720px] table-fixed border-separate border-spacing-1.5"
+          onKeyDown={onKeyDown}
+          role="grid"
+          aria-label="Monthly activity calendar grid. Use arrow keys to navigate between months."
+        >
           <caption className="sr-only">
-            Monthly synthetic record counts. A dash is unavailable; zero is a generated
-            observed-zero example.
+            Monthly values. A dash means no value was supplied; zero is displayed only when
+            explicitly returned by a non-placeholder source.
           </caption>
           <thead>
             <tr>
@@ -87,19 +151,20 @@ export function ActivityCalendar(p: Props) {
                   {year}
                 </th>
                 {MONTHS.map((_, index) => {
-                  const period = `${year}-${String(index + 1).padStart(2, '0')}`
-                  const month = p.result?.months.find((value) => value.period === period)
-                  const selected = p.selected === period
-                  const label = `${periodLabel(period)}: ${month ? (month.value === null ? 'demo data unavailable' : `${month.value} synthetic records`) : 'not loaded'}`
+                  const period = `${String(year).padStart(4, '0')}-${String(index + 1).padStart(2, '0')}`
+                  const month = p.months.find((value) => value.period === period)
+                  const label = `${periodLabel(period)}: ${month ? (month.value === null ? 'value unavailable' : `${month.value}${demo ? ' synthetic records' : ' API value'}`) : p.loaded ? 'outside the loaded series' : 'not loaded'}`
                   return (
                     <td key={period}>
                       <button
                         type="button"
+                        data-period={period}
+                        tabIndex={period === focusPeriod ? 0 : -1}
                         disabled={!month || p.busy}
                         onClick={() => p.onSelect(period)}
                         aria-label={label}
-                        aria-pressed={selected}
-                        className={`min-h-11 w-full rounded-lg border font-mono text-label transition-colors enabled:hover:outline-2 enabled:hover:outline-horizon disabled:cursor-default ${cellColor(month?.value)} ${selected ? 'outline-2 outline-offset-2 outline-horizon' : ''}`}
+                        aria-pressed={p.selected === period}
+                        className={`min-h-11 w-full rounded-lg border font-mono text-label transition-[background-color,border-color,outline-offset] duration-150 ease-gentle enabled:hover:outline-2 enabled:hover:outline-horizon disabled:cursor-default motion-reduce:transition-none ${cellColor(month?.value, demo)} ${p.selected === period ? 'outline-2 outline-offset-2 outline-horizon' : ''}`}
                       >
                         {month?.value ?? '—'}
                       </button>
@@ -112,20 +177,23 @@ export function ActivityCalendar(p: Props) {
         </table>
       </div>
       <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-caption text-muted">
-        {p.mode === 'harmonized' ? (
-          <span>The scientific color scale will be defined with the approved metric and unit.</span>
-        ) : (
+        {demo && p.mode === 'source' ? (
           <>
             <span>Demo count: 0 · 1–5 · 6–10 · &gt;10</span>
             <span>— Unavailable</span>
             <span>0 Generated zero, not a claim about real fires</span>
           </>
+        ) : (
+          <>
+            <span>No scientific color scale is assumed.</span>
+            <span>— Value not supplied or placeholder withheld</span>
+          </>
         )}
       </div>
       <p className="mt-3 text-caption text-muted">
-        {p.result
-          ? 'Select a month to update the map and detail panel.'
-          : 'Choose a study area and run the source demo to populate this layout.'}
+        {p.loaded
+          ? 'Select a month to update its map layer and details. Use arrow keys to navigate the calendar.'
+          : 'Choose a study area and load its calendar.'}
         <span className="block sm:hidden">
           Scroll the calendar horizontally to see every month.
         </span>

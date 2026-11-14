@@ -3,6 +3,28 @@ export type CoordinateDraft = Record<keyof Bounds, string>
 export type ObservationSource = 'VIIRS_NOAA20' | 'MODIS'
 export type DataView = 'source' | 'harmonized'
 export type DemoScenario = 'sample' | 'empty' | 'error'
+export type ConnectionMode = 'api' | 'demo'
+export type ApiSensor = 'modis' | 'viirs'
+export type ApiMonth = MonthValue & {
+  median?: number | null
+  anomaly?: number | null
+  anomalyPct?: number | null
+  harmonized: number | null
+  rawBySensor: Partial<Record<ApiSensor, number | null>>
+}
+export type ApiAnalysisResult = {
+  query: AnalysisQuery
+  provenance: 'api' | 'api-stub'
+  months: ApiMonth[]
+  meta: {
+    methodVersion: string | null
+    unit: string | null
+    k: number | null
+    baselineYears?: number[]
+    anomalyBasis?: string | null
+  }
+}
+export type ExplorerResult = AnalysisResult | ApiAnalysisResult
 
 export type AnalysisQuery = {
   bounds: Bounds

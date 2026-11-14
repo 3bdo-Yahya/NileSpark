@@ -1,53 +1,63 @@
-# BurnCal · NileSpark
+# BurnCal · NileSpark frontend
 
-Frontend demo: React + TypeScript + Vite + Tailwind CSS v4. Cinematic Earth landing, interactive Explorer and UI foundations.
+React + TypeScript + Vite + Tailwind CSS v4. Cinematic Earth landing, geographic Explorer and reusable UI foundations.
 
 ## التشغيل
 
 Node.js 22.13+ from branch 22, or 24+, and npm 10+.
 
 ```powershell
-cd O:\NileSpark
-npm.cmd install
+cd O:\NileSpark\frontend
+npm.cmd ci
 npm.cmd run dev
 ```
 
-Open the address printed by Vite, normally http://127.0.0.1:5173.
+Website: http://127.0.0.1:5173. Start the existing API separately from the repository root, as described in the root README.
 
 ```powershell
 npm.cmd run check
 npm.cmd run format:check
-npm.cmd run preview
 ```
 
-Check runs TypeScript, ESLint, 7 tests and a production build.
+Check runs TypeScript, ESLint, 41 tests and the production build.
 
-## الموجود الآن
+## الاتصال بالبيانات
 
-- Landing بصورة الأرض والنيل وخطوط محلية وحركة تراعي reduced motion.
-- Explorer في #/explore، وخريطة فعلية من OpenFreeMap عبر MapLibre.
-- تحديد مستطيل بنقطتين، أو إدخال الإحداثيات بالكيبورد، وReset.
-- مناطق جاهزة في مصر والبرازيل وأستراليا، واختيار جغرافي مخصص خارجها.
-- الفترة والمصدر التجريبي، تقويم شهري وتفاصيل الشهر وتشغيل الشهور وCSV للشهر المحدد.
-- loading/cancel/error/retry/empty، ومسح النتائج القديمة عند تغيير الاستعلام.
-- الهوية والمكونات في #/foundations ونافذة المصدر والمنهجية والقيود.
+Explorer defaults to API server mode. Calendar, selected-month map, methodology and CSV requests are connected to the existing endpoints. Set VITE_API_BASE_URL through .env.local if needed; see .env.example. It is public configuration, never a secret.
 
-## حدود النسخة
+Data connection → Synthetic demo runs the original fixture without an API. Generated records are clearly labeled and never substituted automatically when the server fails.
 
-الخريطة الجغرافية حقيقية، لكن جميع النقاط والأعداد مولّدة وموسومة SYNTHETIC DEMO. كل صف CSV يصرح بذلك. لا توجد بيانات NASA فعلية أو طلبات تحليل إلى Backend.
+The current API returns placeholders. The frontend explicitly shows API placeholder and withholds its zero values. Placeholder CSVs are not downloaded. Raw and Harmonized views are wired to the response model; this does not mean scientific harmonization is complete.
 
-الـfixture من 2022 إلى 2025، شاملة يوم البداية والنهاية حسب UTC. وحدة الديمو synthetic records/month، وليست كثافة أو anomaly أو مؤشرًا علميًا معتمدًا. صفر مختلف عن البيانات غير المتاحة. مصدر واحد يعرض في كل مرة؛ VIIRS وMODIS هنا محاكاة للواجهة.
+## الوظائف
 
-Harmonized يعرض pending ويعطل التحليل لحد ما الفريق يحسم المؤشر والوحدة والمنهجية. الخريطة تحتاج إنترنت وWebGL؛ الإدخال بالإحداثيات والتقويم متاحان عند تعذرها. حدود العرض ±85° latitude، ومن دون مستطيل يعبر خط التاريخ.
+- AOI rectangle by two corners, manual keyboard bounds and Reset.
+- Inclusive UTC dates: up to 120 months in API mode; fixture limited to 2022–2025.
+- Raw MODIS/VIIRS family calendar or the API-reported harmonized series.
+- Selected-month map cell centroids and CSV clipped to the applied dates, all sensors, static detections excluded.
+- Source/methodology dialog fetched from the server, with loading/error/retry.
+- Request cancellation, timeout, readable errors, independent map retry and preserved inputs.
+- Responsive layout, local fonts, visible focus, reduced motion and UI gallery at #/foundations.
+
+A dash means no supplied value, not zero. No scientific unit or color scale is assumed. Map and CSV have no sensor filter in the current contract. CSV requires readable X-Stub provenance headers; see docs/API_INTEGRATION.md for backend handoff details.
 
 ## التنظيم والأداء
 
-اتجاه الاعتماد app → features → shared UI. منطق الاستعلام والـfixture منفصلان عن العرض، وMapCanvas يملك محرك الخريطة. AnalysisAdapter للديمو الحالي؛ لا يمثل API contract متفقًا عليه.
+app → features → shared UI. src/lib/api owns HTTP, services/apiAnalysis converts wire data, model/presentation selects display values, and hooks orchestrate requests and cancellation. No backend code is changed.
 
-Explorer ومحركه والـworker يحملون عند دخوله. الصور WebP متجاوبة والخطوط محلية. حزمة الخريطة كبيرة وتحذيرها موثق في docs/VERIFICATION.md. لم يقس Web Vitals حتى الآن.
+Explorer and its map worker load on demand; fonts and WebP art are local. The map bundle still triggers Vite's size warning. A local before/after benchmark and browser verification are recorded in docs/E2E_AND_PERFORMANCE.md; no Lighthouse or field Web Vitals pass is claimed.
 
-راجع docs/ARCHITECTURE.md وdocs/DESIGN_SYSTEM.md وdocs/VERIFICATION.md وdocs/ATTRIBUTION.md.
+See docs/ARCHITECTURE.md, docs/API_INTEGRATION.md, docs/VERIFICATION.md and docs/ATTRIBUTION.md.
 
-Figma: https://www.figma.com/design/9gkx5vdSywSJMxdpfB1wdc/
+Latest UI regression fixes: docs/BUGFIX_VERIFICATION.md.
 
-المشروع محلي؛ لم ينشأ Backend أو remote أو commit أو نشر.
+## Browser regression tests
+
+```powershell
+npm.cmd exec -- playwright install chromium
+npm.cmd run test:e2e
+```
+
+16 shared journeys × two Chromium viewport projects. The test server uses marked synthetic fixtures on loopback port 4175; no backend is needed. See [E2E and performance verification](docs/E2E_AND_PERFORMANCE.md) for actual execution evidence, limitations and benchmark reproduction.
+
+Anomaly UI and pending science/API decisions: [Anomaly handoff](docs/ANOMALY_HANDOFF.md).

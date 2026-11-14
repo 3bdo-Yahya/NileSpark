@@ -1,37 +1,33 @@
-# Frontend demo verification
+# Frontend API integration verification
 
-Validated locally on 13 November 2026 with Node 22.20.0.
+Validated locally on 13 November 2026, Node 22.20.0.
 
 ## Automated
 
-- TypeScript checks and ESLint with zero warnings.
-- Seven Node tests: blank/reversed/polar bounds; inclusive dates/leap days/fixture range; record/count/date/AOI consistency; selected-month CSV provenance; unavailable versus zero; cancellation.
-- Vite production build and Prettier check.
-- Dependency audit after installation: zero reported vulnerabilities.
+- TypeScript project checks, ESLint with zero warnings, Vite build and Prettier check passed in O:/NileSpark/frontend.
+- All 21 tests passed: existing AOI/date/demo tests plus API request envelopes, bbox order, month clipping/leap day, non-stub zero versus missing values, placeholder suppression, raw/harmonized projection, schema rejection, count centroids, methodology, HTTP errors, network failures, timeout, cancellation and CSV provenance.
+- npm installation reported zero vulnerabilities.
+- git diff --check passed. Changes are confined to frontend; no backend code or shared API contract was modified.
+- Frontend .gitattributes now pins LF, matching .editorconfig, so Git's Windows CRLF checkout setting does not break formatting checks.
 
-## Browser
+## Browser against the actual local API
 
-Local production preview checked on desktop and 390 × 844 mobile.
+- API calendar POST succeeded, with an explicit placeholder badge. Stub zeros remained unavailable in raw and harmonized views.
+- Selecting a month requested its map endpoint with that month's inclusive dates. Stub geometry stayed empty and labeled; cell layers are separate from synthetic detections.
+- CSV POST succeeded; the known placeholder response produced a status message and no observation download.
+- Methodology loaded from the server and displayed its placeholder status, explanation, version and grid spacing.
+- Stopping the local API caused a map error with the calendar preserved. A separate calendar request showed a readable error with inputs retained. Restarting the API and using Retry API request recovered.
+- Switching to synthetic mode populated the fixture calendar again; returning to API cleared the synthetic result.
+- Desktop 1440 × 1000 and mobile 390 × 844 checked. No page-level horizontal overflow. Mobile controls collapsed and the map refitted its AOI.
+- A fresh final browser tab recorded no console warnings or errors.
+- Both dev servers remain running on 127.0.0.1:5173 and 127.0.0.1:8000.
 
-- Real geographic basemap, selected AOI and synthetic points loaded.
-- Two-corner drawing committed a custom area and synchronized coordinate inputs.
-- Invalid manual bounds showed an error; Reset cleared the area and disabled Run.
-- Keyboard date editing cleared old results; start-after-end showed an error.
-- Calendar selection updated details and map. Zero and unavailable remained distinct; unavailable export was disabled.
-- Export downloaded January 2022 CSV with 12 records, matching its count, each is_demo=true.
-- Request failure preserved inputs; Retry sample recovered. Empty fixture displayed unavailable values rather than zero.
-- Harmonized mode disabled Run and showed pending metric/unit messaging.
-- Play advanced a month; Pause stopped playback.
-- Home/Explorer navigation and map recreation worked. Skip to content focused main without changing the route.
-- Mobile controls collapsed/expanded. No page-level horizontal overflow; the calendar scrolls in its own container.
-- Final fresh preview captured no console warnings/errors.
+The live backend currently supplies placeholders. Non-stub response shapes, explicit zeros, missing sensor keys, centroid validation and CSV header variations were verified with injected unit-test responses, not live NASA data. Browser timeout/429 and non-stub observation downloads have not been tested against a real populated backend. Scientific harmonization is not verified by these checks.
 
-Foundation QA also covered local fonts/image variants, dialog Escape/focus return, visible focus and reduced-motion styles. No Lighthouse/Web Vitals measurement was run. Offline/WebGL fallback is implemented but was not tested by blocking network access.
+## Asset observations
 
-## Production assets
+Approximately 74.1 kB gzip entry JS, 307.6 kB gzip Explorer JS, 8.5 kB entry CSS and 10.4 kB map CSS. The separate worker is 519 kB uncompressed. Existing local fonts and responsive 201 kB/59 kB WebP art remain.
 
-Approximate gzip: entry JS 74.1 kB, Explorer JS 302.3 kB, foundations 3.3 kB, entry CSS 8.3 kB, map CSS 10.4 kB. Separate worker: 519 kB uncompressed. Hero WebP: 201 kB and mobile variant 59 kB.
+Vite still warns about the large minified map route; it is lazy-loaded, and the warning threshold has not been raised. No Lighthouse or Web Vitals measurement is claimed.
 
-Vite warns that the minified map route exceeds 500 kB. Explorer is lazy-loaded so Home does not eagerly load it. The warning remains visible; its threshold has not been raised.
-
-This is a working frontend demonstration with synthetic records. Real NASA data, approved science, harmonization and backend integration are pending.
+See API_INTEGRATION.md for unresolved unit/coverage semantics and cross-origin CSV provenance headers.
