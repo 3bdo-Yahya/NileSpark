@@ -52,7 +52,7 @@ export function Home({ onOpenMethod }: { onOpenMethod: () => void }) {
                 </button>
                 <a href="#our-story">Our story</a>
               </nav>
-              <Badge>Frontend demo</Badge>
+              <Badge>Global fire activity</Badge>
             </header>
             <div className="relative flex min-h-[560px] flex-1 items-center py-16 sm:min-h-[580px] sm:py-20">
               <div className="relative z-10 w-full md:w-4/5 lg:w-[62%]">

@@ -19,7 +19,7 @@
     "check": "npm run typecheck && npm run lint && npm run test && npm run build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "node --experimental-strip-types --test src/features/explorer/model/query.test.ts src/features/explorer/model/presentation.test.ts src/features/explorer/model/querySummary.test.ts src/features/explorer/components/calendarNavigation.test.ts src/features/explorer/services/demoAnalysis.test.ts src/features/explorer/services/apiAnalysis.test.ts src/lib/api/client.test.ts",
+    "test": "node --experimental-strip-types --test src/features/explorer/model/query.test.ts src/features/explorer/model/presentation.test.ts src/features/explorer/model/querySummary.test.ts src/features/explorer/components/calendarNavigation.test.ts src/features/explorer/services/apiAnalysis.test.ts src/lib/api/client.test.ts",
     "build:e2e": "node e2e/build.mjs",
     "serve:e2e": "node e2e/server.mjs",
     "test:e2e": "npm run build:e2e && playwright test",

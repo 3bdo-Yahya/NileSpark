@@ -33,7 +33,7 @@ export function App() {
         {route === 'home' ? (
           <Home onOpenMethod={() => setMethodOpen(true)} />
         ) : (
-          <DeferredExplorer onOpenMethod={() => setMethodOpen(true)} />
+          <DeferredExplorer />
         )}
       </RouteBoundary>
       <MethodDialog open={methodOpen} onClose={() => setMethodOpen(false)} />

@@ -10,13 +10,12 @@ import { AnomalyPanel } from './components/AnomalyPanel'
 import { QuerySummary } from './components/QuerySummary'
 import { useExplorer } from './useExplorer'
 import { ApiMethodDialog } from './components/ApiMethodDialog'
-import type { ConnectionMode, DemoScenario } from './model/types'
 
-export default function Explorer({ onOpenMethod }: { onOpenMethod: () => void }) {
+export default function Explorer() {
   const state = useExplorer()
   const [methodOpen, setMethodOpen] = useState(false)
-  const demo = state.connection === 'demo'
-  const showMethod = () => (demo ? onOpenMethod() : setMethodOpen(true))
+  const demo = false
+  const showMethod = () => setMethodOpen(true)
   return (
     <main
       id="main"
@@ -67,31 +66,7 @@ export default function Explorer({ onOpenMethod }: { onOpenMethod: () => void })
             </>
           )}
         </p>
-        <label className="flex items-center gap-2 text-caption text-muted">
-          Data connection
-          <select
-            value={state.connection}
-            onChange={(event) => state.onConnection(event.target.value as ConnectionMode)}
-            className="min-h-10 rounded-lg border border-stroke-strong bg-raised px-3 text-label text-paper"
-          >
-            <option value="api">API server</option>
-            <option value="demo">Synthetic demo</option>
-          </select>
-        </label>
-        {demo && (
-          <label className="flex items-center gap-2 text-caption text-muted">
-            Demo scenarios
-            <select
-              value={state.scenario}
-              onChange={(event) => state.onScenario(event.target.value as DemoScenario)}
-              className="min-h-10 rounded-lg border border-stroke-strong bg-raised px-3 text-label text-paper"
-            >
-              <option value="sample">Sample results</option>
-              <option value="empty">No observations</option>
-              <option value="error">Request failure</option>
-            </select>
-          </label>
-        )}
+
       </div>
       <QuerySummary
         bounds={state.bounds}
@@ -195,7 +170,7 @@ export default function Explorer({ onOpenMethod }: { onOpenMethod: () => void })
         </div>
       </div>
       <footer className="mt-8 flex flex-wrap justify-between gap-3 border-t border-stroke pt-5 text-caption text-muted">
-        <p>NileSpark / BurnCal · demonstration interface</p>
+        <p>NileSpark / BurnCal · Global fire activity explorer</p>
       </footer>
       <ApiMethodDialog open={methodOpen} onClose={() => setMethodOpen(false)} />
     </main>

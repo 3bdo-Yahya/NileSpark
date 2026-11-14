@@ -7,13 +7,11 @@ import type {
   Bounds,
   ConnectionMode,
   DataView,
-  DemoScenario,
   ExplorerResult,
   ObservationSource,
 } from './model/types'
-import { demoAnalysis } from './services/demoAnalysis'
 import { analysisApi } from './services/api'
-import { downloadBlob, downloadMonthCsv } from './services/exportCsv'
+import { downloadBlob } from './services/exportCsv'
 import { useApiMap } from './useApiMap'
 
 export function useExplorer() {
@@ -22,11 +20,10 @@ export function useExplorer() {
   const [areaName, setAreaName] = useState<string>(PRESETS[0].name)
   const [from, setFrom] = useState('2025-01-01')
   const [to, setTo] = useState('2025-12-31')
-  const [connection, setConnection] = useState<ConnectionMode>('api')
+  const connection: ConnectionMode = 'api'
   const [source, setSource] = useState<ObservationSource>('VIIRS_NOAA20')
   const [apiSensor, setApiSensor] = useState<ApiSensor>('viirs')
   const [mode, setMode] = useState<DataView>('source')
-  const [scenario, setScenario] = useState<DemoScenario>('sample')
   const [drawing, setDrawing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -83,21 +80,17 @@ export function useExplorer() {
           const index = result.months.findIndex((month) => month.period === previous)
           return result.months[(index + 1) % result.months.length]?.period ?? null
         }),
-      result.provenance === 'synthetic-demo' ? 1100 : 3500,
+      3500,
     )
     return () => clearInterval(timer)
   }, [playing, result])
 
-  async function analyze(override?: DemoScenario) {
+  async function analyze() {
     setError(null)
     setRequestError(null)
     setPlaying(false)
     if (!bounds || !boundsMatch(draft, bounds)) {
       setError('Choose an area and apply its coordinates first.')
-      return
-    }
-    if (connection === 'demo' && mode === 'harmonized') {
-      setError('Harmonization is not simulated. Select Source demo.')
       return
     }
     const query = { bounds, from, to, source }
@@ -113,19 +106,13 @@ export function useExplorer() {
     setExportError(null)
     const controller = new AbortController()
     active.current = controller
-    if (override) setScenario(override)
     setBusy(true)
     setResult(null)
     setSelected(null)
     setDrawing(false)
-    setNotice(
-      connection === 'api' ? 'Requesting the API calendar…' : 'Preparing the synthetic demo…',
-    )
+    setNotice('Requesting the API calendar…')
     try {
-      const output =
-        connection === 'api'
-          ? await analysisApi.calendar(query, controller.signal)
-          : await demoAnalysis.analyze(query, controller.signal, override ?? scenario)
+      const output = await analysisApi.calendar(query, controller.signal)
       if (controller.signal.aborted || active.current !== controller) return
       setResult(output)
       const values = calendarMonths(output, mode, apiSensor)
@@ -151,22 +138,11 @@ export function useExplorer() {
     }
   }
   const months = useMemo(() => calendarMonths(result, mode, apiSensor), [result, mode, apiSensor])
-  const observations = useMemo(
-    () =>
-      result?.provenance === 'synthetic-demo' && mode === 'source'
-        ? result.observations.filter((record) => record.period === selected)
-        : [],
-    [result, selected, mode],
-  )
+  const observations = useMemo(() => [], [])
   const map = useApiMap(result, selected)
 
   async function exportMonth() {
     if (!result || !selected) return
-    if (result.provenance === 'synthetic-demo') {
-      downloadMonthCsv(result, selected)
-      setNotice(`Downloaded DEMO CSV for ${selected}: ${observations.length} synthetic records.`)
-      return
-    }
     exportActive.current?.abort()
     const controller = new AbortController()
     exportActive.current = controller
@@ -221,7 +197,6 @@ export function useExplorer() {
     source,
     apiSensor,
     mode,
-    scenario,
     drawing,
     busy,
     error,
@@ -249,7 +224,7 @@ export function useExplorer() {
     onApply: () => {
       const parsed = parseBounds(draft)
       if (!parsed) {
-        setError('Enter valid bounds: west < east, south < north; longitude ±180°, latitude ±85°.')
+        setError('Enter valid bounds: west < east, south < north; longitude Â±180Â°, latitude Â±85Â°.')
         return
       }
       setArea(parsed, 'Custom area')
@@ -267,20 +242,10 @@ export function useExplorer() {
       setApiSensor(value)
       setPlaying(false)
     },
-    onConnection: (value: ConnectionMode) => {
-      invalidate()
-      setConnection(value)
-      setMode('source')
-      setDrawing(false)
-    },
     onMode: (value: DataView) => {
       setPlaying(false)
       setMode(value)
       setError(null)
-    },
-    onScenario: (value: DemoScenario) => {
-      invalidate()
-      setScenario(value)
     },
     onDraw: () => {
       if (!drawing) invalidate()
@@ -302,7 +267,7 @@ export function useExplorer() {
       void analyze()
     },
     onRetry: () => {
-      void analyze(connection === 'demo' ? 'sample' : undefined)
+      void analyze()
     },
     onSelect: selectPeriod,
     onPlay: () => {
