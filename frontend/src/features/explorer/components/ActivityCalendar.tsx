@@ -7,13 +7,19 @@ import type { ConnectionMode, DataView, MonthValue } from '../model/types'
 import { adjacentPeriod, revealCalendarMonth } from './calendarNavigation'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-function cellColor(value: number | null | undefined, demo: boolean): string {
+const ACTIVITY_COLORS = [
+  'border-[#6D5140] bg-[#4C3C32] text-paper',
+  'border-[#A57350] bg-[#865B3E] text-paper',
+  'border-brand bg-brand text-on-brand',
+  'border-[#FFE0C4] bg-[#FFE0C4] text-on-brand',
+]
+function cellColor(value: number | null | undefined, maximum: number): string {
   if (value == null) return 'border-dashed border-stroke bg-space text-muted'
-  if (!demo || value === 0) return 'border-stroke bg-control text-secondary'
-  if (value <= 5) return 'border-[#6D5140] bg-[#4C3C32] text-paper'
-  if (value <= 10) return 'border-[#A57350] bg-[#865B3E] text-paper'
-  return 'border-brand bg-brand text-on-brand'
+  if (value <= 0 || maximum <= 0) return 'border-stroke bg-control text-secondary'
+  const level = Math.min(3, Math.max(0, Math.ceil((value / maximum) * 4) - 1))
+  return ACTIVITY_COLORS[level]!
 }
+
 type Props = {
   months: MonthValue[]
   loaded: boolean
@@ -31,7 +37,7 @@ export function ActivityCalendar(p: Props) {
   const start = Math.min(9999, Math.max(1, Number(p.from.slice(0, 4)) || 2025))
   const end = Math.min(9999, start + 10, Math.max(start, Number(p.to.slice(0, 4)) || start))
   const years = Array.from({ length: end - start + 1 }, (_, index) => start + index)
-  const demo = p.connection === 'demo'
+  const maximum = Math.max(0, ...p.months.map((month) => month.value ?? 0))
   const playable = p.months.some((month) => month.value !== null)
   const gridRef = useRef<HTMLTableElement>(null)
   const focusPeriod = p.months.some((month) => month.period === p.selected)
@@ -96,11 +102,8 @@ export function ActivityCalendar(p: Props) {
             Every month, a different signal.
           </h2>
           <p className="mt-2 text-label text-muted">
-            {demo
-              ? p.mode === 'harmonized'
-                ? 'Metric and unit await scientific approval.'
-                : 'Synthetic records per month · one demo source at a time.'
-              : `API calendar · ${p.mode === 'source' ? 'raw sensor values' : 'reported harmonized values'}`}
+            {p.mode === 'source' ? 'Raw sensor values' : 'Harmonized values'} · color intensity
+            relative to the highest displayed month.
           </p>
         </div>
         <Button
@@ -153,7 +156,7 @@ export function ActivityCalendar(p: Props) {
                 {MONTHS.map((_, index) => {
                   const period = `${String(year).padStart(4, '0')}-${String(index + 1).padStart(2, '0')}`
                   const month = p.months.find((value) => value.period === period)
-                  const label = `${periodLabel(period)}: ${month ? (month.value === null ? 'value unavailable' : `${month.value}${demo ? ' synthetic records' : ' API value'}`) : p.loaded ? 'outside the loaded series' : 'not loaded'}`
+                  const label = `${periodLabel(period)}: ${month ? (month.value === null ? 'value unavailable' : `${month.value} API value`) : p.loaded ? 'outside the loaded series' : 'not loaded'}`
                   return (
                     <td key={period}>
                       <button
@@ -164,7 +167,7 @@ export function ActivityCalendar(p: Props) {
                         onClick={() => p.onSelect(period)}
                         aria-label={label}
                         aria-pressed={p.selected === period}
-                        className={`min-h-11 w-full rounded-lg border font-mono text-label transition-[background-color,border-color,outline-offset] duration-150 ease-gentle enabled:hover:outline-2 enabled:hover:outline-horizon disabled:cursor-default motion-reduce:transition-none ${cellColor(month?.value, demo)} ${p.selected === period ? 'outline-2 outline-offset-2 outline-horizon' : ''}`}
+                        className={`min-h-11 w-full rounded-lg border font-mono text-label transition-[background-color,border-color,outline-offset] duration-150 ease-gentle enabled:hover:outline-2 enabled:hover:outline-horizon disabled:cursor-default motion-reduce:transition-none ${cellColor(month?.value, maximum)} ${p.selected === period ? 'outline-2 outline-offset-2 outline-horizon' : ''}`}
                       >
                         {month?.value ?? '—'}
                       </button>
@@ -177,18 +180,16 @@ export function ActivityCalendar(p: Props) {
         </table>
       </div>
       <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-caption text-muted">
-        {demo && p.mode === 'source' ? (
-          <>
-            <span>Demo count: 0 · 1–5 · 6–10 · &gt;10</span>
-            <span>— Unavailable</span>
-            <span>0 Generated zero, not a claim about real fires</span>
-          </>
-        ) : (
-          <>
-            <span>No scientific color scale is assumed.</span>
-            <span>— Value not supplied or placeholder withheld</span>
-          </>
-        )}
+        <span>0</span>
+        <span className="inline-flex items-center gap-1" aria-hidden="true">
+          <span className="h-3 w-4 rounded-sm border border-stroke bg-control" />
+          {ACTIVITY_COLORS.map((color) => (
+            <span key={color} className={`h-3 w-4 rounded-sm border ${color}`} />
+          ))}
+        </span>
+        <span>Highest displayed value: {maximum.toLocaleString()}</span>
+        <span>Relative scale resets when area, dates, sensor or data view changes.</span>
+        <span>— Value unavailable</span>
       </div>
       <p className="mt-3 text-caption text-muted">
         {p.loaded
