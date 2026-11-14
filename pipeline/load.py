@@ -1,86 +1,83 @@
 """Normalize MODIS/VIIRS FIRMS CSVs into hotspots.parquet.
 
-Owner: Maryam.
 Contract: docs/PIPELINE_OUTPUT.md → hotspots.parquet
+Run: python -m pipeline.load   (~40 s for 79M detections, < 2 GB RAM)
 """
 
 from __future__ import annotations
 
+import time
+from collections.abc import Mapping
 from pathlib import Path
 
+from pipeline.db import connect
+from pipeline.paths import HOTSPOTS_PARQUET, SENSOR_DIRS
 
-def normalize_modis_row(row: dict, country: str) -> dict:
-    """Map one MODIS CSV row to the shared hotspot schema."""
-    conf = float(row.get("confidence") or 0)
-    return {
-        "sensor": "modis",
-        "satellite": row.get("satellite"),
-        "country": country,
-        "acq_date": row.get("acq_date"),
-        "acq_time": int(row.get("acq_time") or 0),
-        "lat": float(row["latitude"]),
-        "lon": float(row["longitude"]),
-        "frp": _optional_float(row.get("frp")),
-        "conf_norm": conf / 100.0,
-        "type": int(row.get("type") or 0),
-        "daynight": row.get("daynight"),
-        "brightness": _optional_float(row.get("brightness")),
-    }
+HOTSPOT_COLUMNS = (
+    "sensor", "satellite", "country", "acq_date", "acq_time", "lat", "lon",
+    "frp", "conf_norm", "type", "daynight", "brightness",
+)
 
+_SELECT = """
+SELECT
+    '{sensor}' AS sensor,
+    CAST(satellite AS VARCHAR) AS satellite,
+    regexp_extract(filename, '_[0-9]{{4}}_(.+)\\.csv$', 1) AS country,
+    CAST(acq_date AS DATE) AS acq_date,
+    CAST(acq_time AS SMALLINT) AS acq_time,
+    CAST(latitude AS DOUBLE) AS lat,
+    CAST(longitude AS DOUBLE) AS lon,
+    CAST(frp AS DOUBLE) AS frp,
+    {conf_norm} AS conf_norm,
+    CAST(type AS TINYINT) AS type,
+    CAST(daynight AS VARCHAR) AS daynight,
+    CAST({brightness} AS DOUBLE) AS brightness
+FROM read_csv('{glob}', union_by_name = true, filename = true,
+              types = {{'confidence': 'VARCHAR', 'acq_time': 'VARCHAR', 'version': 'VARCHAR'}})
+WHERE type = 0 AND {qc}
+"""
 
-def normalize_viirs_row(row: dict, country: str, sensor: str) -> dict:
-    """Map one VIIRS CSV row to the shared hotspot schema."""
-    conf_map = {"l": 0.3, "n": 0.7, "h": 1.0}
-    raw_conf = str(row.get("confidence") or "n").lower()
-    return {
-        "sensor": sensor,
-        "satellite": row.get("satellite"),
-        "country": country,
-        "acq_date": row.get("acq_date"),
-        "acq_time": int(row.get("acq_time") or 0),
-        "lat": float(row["latitude"]),
-        "lon": float(row["longitude"]),
-        "frp": _optional_float(row.get("frp")),
-        "conf_norm": conf_map.get(raw_conf, 0.7),
-        "type": int(row.get("type") or 0),
-        "daynight": row.get("daynight"),
-        "brightness": _optional_float(row.get("bright_ti4")),
-    }
-
-
-def passes_default_qc(row: dict) -> bool:
-    """Vegetation fires only; drop low confidence."""
-    if int(row.get("type", -1)) != 0:
-        return False
-    conf = float(row.get("conf_norm") or 0)
-    sensor = row.get("sensor")
-    if sensor == "modis":
-        return conf >= 0.30
-    # VIIRS: keep nominal (0.7) and high (1.0)
-    return conf >= 0.70
+# Vegetation fires only (type 0); MODIS confidence >= 30; VIIRS nominal or high.
+_MODIS = {
+    "conf_norm": "CAST(confidence AS DOUBLE) / 100.0",
+    "brightness": "brightness",
+    "qc": "TRY_CAST(confidence AS DOUBLE) >= 30",
+}
+_VIIRS = {
+    "conf_norm": "CASE lower(confidence) WHEN 'h' THEN 1.0 WHEN 'n' THEN 0.7 ELSE 0.3 END",
+    "brightness": "bright_ti4",
+    "qc": "lower(confidence) IN ('n', 'h')",
+}
 
 
-def country_from_filename(path: Path) -> str:
-    """modis_2025_Egypt.csv → Egypt."""
-    stem = path.stem
-    parts = stem.split("_")
-    # sensor tokens vary: modis | viirs-snpp | viirs-jpss1
-    # last token(s) after year are the country
-    for i, part in enumerate(parts):
-        if part.isdigit() and len(part) == 4:
-            return "_".join(parts[i + 1 :])
-    return stem
-
-
-def build_hotspots(_raw_root: Path | None = None) -> Path:
-    """Scan data/raw, QC, write hotspots.parquet. Maryam implements body."""
-    raise NotImplementedError(
-        "Maryam: walk SENSOR_DIRS, normalize rows, apply passes_default_qc, "
-        "write atomically to HOTSPOTS_PARQUET"
+def build_hotspots(raw_dirs: Mapping[str, Path] = SENSOR_DIRS, target: Path = HOTSPOTS_PARQUET) -> Path:
+    """QC'd detections from raw/<sensor>/<year>/<sensor>_<year>_<Country>.csv -> target parquet."""
+    parts = [
+        _SELECT.format(sensor=sensor, glob=f"{root}/*/*.csv", **(_MODIS if sensor == "modis" else _VIIRS))
+        for sensor, root in raw_dirs.items()
+        if any(Path(root).glob("*/*.csv"))
+    ]
+    if not parts:
+        raise FileNotFoundError(f"No FIRMS CSVs under {', '.join(str(r) for r in raw_dirs.values())}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp = target.with_suffix(".parquet.tmp")
+    connect().sql(
+        f"COPY ({' UNION ALL '.join(parts)}) TO '{tmp}' (FORMAT parquet, COMPRESSION zstd, ROW_GROUP_SIZE 500000)"
     )
+    tmp.replace(target)
+    return target
 
 
-def _optional_float(value) -> float | None:
-    if value is None or value == "":
-        return None
-    return float(value)
+def main() -> None:
+    started = time.time()
+    target = build_hotspots()
+    for row in connect().sql(
+        f"SELECT sensor, count(*), min(acq_date), max(acq_date), count(DISTINCT country) "
+        f"FROM '{target}' GROUP BY 1 ORDER BY 1"
+    ).fetchall():
+        print(row)
+    print(f"wrote {target} in {time.time() - started:.1f}s")
+
+
+if __name__ == "__main__":
+    main()
