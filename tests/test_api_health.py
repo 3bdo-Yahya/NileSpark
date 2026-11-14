@@ -21,7 +21,11 @@ def test_health():
     assert body["data"]["status"] == "ok"
 
 
-def test_calendar_stub_shape():
+def test_calendar_missing_products(monkeypatch):
+    from api import main
+    def missing(*args):
+        raise main.ProductsMissing("missing pipeline outputs")
+    monkeypatch.setattr(main, "calendar_for_bbox", missing)
     r = client.post(
         "/api/calendar",
         json={
@@ -31,12 +35,8 @@ def test_calendar_stub_shape():
             "include_static": False,
         },
     )
-    assert r.status_code == 200
-    body = r.json()
-    assert body["success"] is True
-    assert "months" in body["data"]
-    assert "years" in body["data"]
-    assert body["meta"].get("stub") is True
+    assert r.status_code == 503
+    assert r.json()["success"] is False
 
 
 def test_calendar_rejects_bad_bbox():
@@ -51,7 +51,11 @@ def test_calendar_rejects_bad_bbox():
     assert r.status_code == 422
 
 
-def test_methodology_stub():
+def test_methodology(tmp_path, monkeypatch):
+    from api import main
+    factors = tmp_path / "factors.json"
+    factors.write_text('{"plain_language":"sample","countries":{}}')
+    monkeypatch.setattr(main, "FACTORS_JSON", factors)
     r = client.get("/api/methodology")
     assert r.status_code == 200
     assert r.json()["success"] is True

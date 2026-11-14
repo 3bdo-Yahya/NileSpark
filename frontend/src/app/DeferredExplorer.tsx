@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import type { ComponentProps } from 'react'
 import type ExplorerComponent from '../features/explorer/Explorer'
 
 type ExplorerPage = typeof ExplorerComponent
@@ -20,7 +19,7 @@ function loadExplorer(): Promise<ExplorerPage> {
 }
 
 /** Load the route independently of Suspense reveal throttling; keep its explicit loading/error UI. */
-export function DeferredExplorer(props: ComponentProps<ExplorerPage>) {
+export function DeferredExplorer() {
   const [loaded, setLoaded] = useState<{ Page: ExplorerPage | null; error: Error | null }>(() => ({
     Page: cached,
     error: null,
@@ -47,7 +46,7 @@ export function DeferredExplorer(props: ComponentProps<ExplorerPage>) {
   if (loaded.error) throw loaded.error
   const Page = loaded.Page
   return Page ? (
-    <Page {...props} />
+    <Page />
   ) : (
     <main
       id="main"

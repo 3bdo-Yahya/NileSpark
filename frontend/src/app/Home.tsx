@@ -52,7 +52,7 @@ export function Home({ onOpenMethod }: { onOpenMethod: () => void }) {
                 </button>
                 <a href="#our-story">Our story</a>
               </nav>
-              <Badge>Frontend demo</Badge>
+              <Badge>Global fire activity</Badge>
             </header>
             <div className="relative flex min-h-[560px] flex-1 items-center py-16 sm:min-h-[580px] sm:py-20">
               <div className="relative z-10 w-full md:w-4/5 lg:w-[62%]">
@@ -131,9 +131,6 @@ export function Home({ onOpenMethod }: { onOpenMethod: () => void }) {
           burncal<span className="text-brand">.</span>
         </a>
         <p>Built by NileSpark. From a local story to a global question.</p>
-        <a className="text-label text-muted" href="#/foundations">
-          Interface foundations ↗
-        </a>
         <a href="https://firms.modaps.eosdis.nasa.gov/" target="_blank" rel="noreferrer">
           NASA FIRMS <span className="sr-only">(opens in a new tab)</span>
           <ArrowUpRight size={14} aria-hidden="true" />

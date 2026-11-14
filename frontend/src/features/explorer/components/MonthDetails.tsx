@@ -76,7 +76,9 @@ export function MonthDetails(p: Props) {
               ? 'Metric & unit pending'
               : demo
                 ? 'Synthetic records / demo only'
-                : (api?.meta.unit ?? 'Unit not supplied by API')}
+                : p.mode === 'source' && api?.meta.methodVersion === 'v2'
+                  ? 'Fire cell-days'
+                  : (api?.meta.unit ?? 'Unit not supplied by API')}
           </p>
 
           {/* Display which view is active: Raw sensor or Harmonized */}
@@ -161,7 +163,7 @@ export function MonthDetails(p: Props) {
               : p.result.provenance === 'synthetic-demo'
                 ? `${p.result.query.source.replaceAll('_', ' ')} · demo`
                 : p.mode === 'source'
-                  ? `${p.apiSensor.toUpperCase()} family · API raw values`
+                  ? `${p.apiSensor === 'viirs' ? 'VIIRS S-NPP' : 'MODIS'} · raw cell-days`
                   : 'API harmonized series'}
           </dd>
         </div>
@@ -195,7 +197,7 @@ export function MonthDetails(p: Props) {
         </div>
         {api && (
           <div>
-            <dt className="text-caption text-muted">Applied scale factor</dt>
+            <dt className="text-caption text-muted">MODIS conversion factor</dt>
             <dd>{stub ? 'Placeholder withheld' : (api.meta.k ?? 'Not supplied')}</dd>
           </div>
         )}

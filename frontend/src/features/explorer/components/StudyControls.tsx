@@ -173,15 +173,15 @@ export function StudyControls(p: Props) {
                 </>
               ) : (
                 <>
-                  <option value="viirs">VIIRS · API family</option>
+                  <option value="viirs">VIIRS S-NPP</option>
                   <option value="modis">MODIS · API family</option>
                 </>
               )}
             </select>
             {p.connection === 'api' && (
               <p className="mt-2 text-caption text-muted">
-                Changes the raw calendar display only. Map cells and CSV include all sensors; static
-                detections are excluded.
+                Changes the raw calendar display only. Map uses VIIRS when available, otherwise
+                MODIS. CSV includes all sensors; static detections are excluded.
               </p>
             )}
           </div>
