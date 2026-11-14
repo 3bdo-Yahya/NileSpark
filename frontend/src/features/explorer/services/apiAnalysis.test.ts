@@ -9,6 +9,7 @@ import {
   decodeMethodology,
   monthQuery,
 } from './apiAnalysis.ts'
+import { anomalyForMonth } from '../model/anomaly.ts'
 import { calendarMonths } from '../model/presentation.ts'
 import { periodsBetween, validateQuery } from '../model/query.ts'
 import type { AnalysisQuery } from '../model/types.ts'
@@ -150,4 +151,58 @@ test('methodology reports placeholder flags without treating a factor as applied
   assert.equal(result.stub, true)
   assert.equal(result.globalFactor, null)
   assert.throws(() => decodeMethodology({ overlap_years: ['2024'] }, {}))
+})
+
+test('anomaly contract preserves signed/zero values and withholds all stub comparisons', () => {
+  const data = {
+    months: [{ year: 2024, month: 2, value: 4, median: 4, anomaly: 0, anomaly_pct: 0 }],
+  }
+  const real = decodeCalendar(
+    data,
+    { baseline_years: [2020, 2021], anomaly_basis: 'harmonized cell-days' },
+    query,
+  )
+  assert.equal(real.months[0]?.median, 4)
+  assert.equal(real.months[0]?.anomaly, 0)
+  assert.equal(real.months[0]?.anomalyPct, 0)
+  assert.deepEqual(real.meta.baselineYears, [2020, 2021])
+  assert.equal(real.meta.anomalyBasis, 'harmonized cell-days')
+  const stub = decodeCalendar(data, { stub: true }, query)
+  assert.equal(stub.months[0]?.median, null)
+  assert.equal(stub.months[0]?.anomaly, null)
+  assert.equal(stub.months[0]?.anomalyPct, null)
+  assert.equal(real.months[1]?.anomaly, undefined)
+})
+
+test('anomaly decoding rejects nonnumeric/nonfinite comparisons and invalid baseline metadata', () => {
+  for (const field of ['median', 'anomaly', 'anomaly_pct'])
+    for (const value of ['4', Infinity, NaN])
+      assert.throws(() =>
+        decodeCalendar({ months: [{ year: 2024, month: 2, value: 1, [field]: value }] }, {}, query),
+      )
+  for (const baseline_years of ['2020', [0], ['2020'], [Infinity]])
+    assert.throws(() => decodeCalendar({ months: [] }, { baseline_years }, query))
+})
+
+test('anomaly presentation distinguishes missing, signed, zero and undefined percentages', () => {
+  const data = {
+    months: [{ year: 2024, month: 2, value: 4, median: 8, anomaly: -4, anomaly_pct: -50 }],
+  }
+  const result = decodeCalendar(data, {}, query)
+  assert.deepEqual(anomalyForMonth(result, '2024-02'), {
+    median: 8,
+    anomaly: -4,
+    percentage: -50,
+    reason: null,
+  })
+  result.months[0]!.median = 0
+  assert.equal(anomalyForMonth(result, '2024-02').percentage, null)
+  result.months[0]!.anomaly = 0
+  assert.equal(anomalyForMonth(result, '2024-02').anomaly, 0)
+  assert.match(anomalyForMonth(result, '2024-03').reason!, /not supplied/)
+  assert.match(anomalyForMonth(null, null).reason!, /Load an API/)
+  assert.match(
+    anomalyForMonth({ ...result, provenance: 'api-stub' }, '2024-02').reason!,
+    /placeholder/,
+  )
 })

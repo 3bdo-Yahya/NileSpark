@@ -78,6 +78,9 @@ export function decodeCalendar(
       throw new ApiError('The calendar response contains an invalid month.')
     const period = `${String(row.year).padStart(4, '0')}-${String(row.month).padStart(2, '0')}`
     if (rows.has(period)) throw new ApiError('The calendar response contains duplicate months.')
+    const median = numeric(row.median)
+    const anomaly = numeric(row.anomaly)
+    const anomalyPct = numeric(row.anomaly_pct)
     const harmonized = numeric(row.value)
     const raw = row.raw_by_sensor == null ? {} : object(row.raw_by_sensor)
     const modis = numeric(raw.modis)
@@ -86,10 +89,19 @@ export function decodeCalendar(
       period,
       value: stub ? null : harmonized,
       status: !stub && harmonized !== null ? 'available' : 'unavailable',
+      median: stub ? null : median,
+      anomaly: stub ? null : anomaly,
+      anomalyPct: stub ? null : anomalyPct,
       harmonized: stub ? null : harmonized,
       rawBySensor: stub ? {} : { modis, viirs },
     })
   }
+  const baselineYears = meta.baseline_years ?? []
+  if (
+    !Array.isArray(baselineYears) ||
+    baselineYears.some((year) => !Number.isInteger(year) || year < 1 || year > 9999)
+  )
+    throw new ApiError('The API returned invalid baseline years.')
   return {
     query: { ...query, bounds: { ...query.bounds } },
     provenance: stub ? 'api-stub' : 'api',
@@ -103,7 +115,13 @@ export function decodeCalendar(
           rawBySensor: {},
         },
     ),
-    meta: { methodVersion: text(meta.method_version), unit: text(meta.unit), k: numeric(meta.k) },
+    meta: {
+      methodVersion: text(meta.method_version),
+      unit: text(meta.unit),
+      k: numeric(meta.k),
+      baselineYears: stub ? [] : baselineYears,
+      anomalyBasis: stub ? null : text(meta.anomaly_basis),
+    },
   }
 }
 export function decodeMap(data: unknown, meta: Record<string, unknown>): ApiMapData {

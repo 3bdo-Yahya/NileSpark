@@ -189,6 +189,9 @@ const server = createServer(async (req, res) => {
                   year: Number(period.slice(0, 4)),
                   month: Number(period.slice(5, 7)),
                   value: stub || i === 1 ? 0 : 20 + i,
+                  median: i === 3 ? 0 : i === 1 ? 5 : 20 + i,
+                  anomaly: i === 1 ? -5 : i === 3 ? 23 : 0,
+                  anomaly_pct: i === 3 ? null : i === 1 ? -100 : 0,
                   raw_by_sensor: {
                     modis: stub || i === 1 ? 0 : 5 + i,
                     viirs: stub || i === 1 ? 0 : 10 + i,

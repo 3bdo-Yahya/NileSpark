@@ -19,7 +19,7 @@ npm.cmd run check
 npm.cmd run format:check
 ```
 
-Check runs TypeScript, ESLint, 38 tests and the production build.
+Check runs TypeScript, ESLint, 41 tests and the production build.
 
 ## الاتصال بالبيانات
 
@@ -58,4 +58,6 @@ npm.cmd exec -- playwright install chromium
 npm.cmd run test:e2e
 ```
 
-15 shared journeys × two Chromium viewport projects. The test server uses marked synthetic fixtures on loopback port 4175; no backend is needed. See [E2E and performance verification](docs/E2E_AND_PERFORMANCE.md) for actual execution evidence, limitations and benchmark reproduction.
+16 shared journeys × two Chromium viewport projects. The test server uses marked synthetic fixtures on loopback port 4175; no backend is needed. See [E2E and performance verification](docs/E2E_AND_PERFORMANCE.md) for actual execution evidence, limitations and benchmark reproduction.
+
+Anomaly UI and pending science/API decisions: [Anomaly handoff](docs/ANOMALY_HANDOFF.md).

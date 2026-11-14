@@ -278,3 +278,40 @@ journeys.push({
     await noOverflow(d)
   },
 })
+
+journeys.push({
+  name: 'anomaly view preserves zero, signed differences, missing months and withheld placeholders',
+  run: async (d) => {
+    await start(d)
+    await load(d)
+    await heading(d, 'Monthly anomaly').waitFor({ state: 'visible' })
+    await button(d, 'Show anomaly view').press('Enter')
+    await button(d, 'February 2025').press('Enter')
+    await heading(d, 'February 2025').waitFor({ state: 'visible' })
+    assert.match(
+      await d.getByRole('region', { name: 'Monthly anomaly', exact: true }).innerText(),
+      /-5[\s\S]*-100%/,
+    )
+    await button(d, 'March 2025').press('Enter')
+    await text(d, 'Historical comparison not supplied for this month.').waitFor({
+      state: 'visible',
+    })
+    await button(d, 'April 2025').press('Enter')
+    await text(d, 'Percentage is undefined for a zero historical median.').waitFor({
+      state: 'visible',
+    })
+    await button(d, 'January 2025').press('Enter')
+    assert.match(
+      await d.getByRole('region', { name: 'Monthly anomaly', exact: true }).innerText(),
+      /0%/,
+    )
+    await noOverflow(d)
+    await start(d, 'stub')
+    await button(d, 'Load API calendar →').press('Enter')
+    await text(d, 'API placeholder; anomaly values are withheld.').waitFor({ state: 'visible' })
+    const region = await d.getByRole('region', { name: 'Monthly anomaly', exact: true }).innerText()
+    assert.ok(!region.includes('0%'))
+    await d.getByRole('combobox', { name: /Data connection/ }).selectOption('demo')
+    await text(d, 'Anomalies are unavailable in the synthetic demo.').waitFor({ state: 'visible' })
+  },
+})

@@ -6,6 +6,7 @@ import { StudyControls } from './components/StudyControls'
 import { LazyMapCanvas } from './components/LazyMapCanvas'
 import { MonthDetails } from './components/MonthDetails'
 import { ActivityCalendar } from './components/ActivityCalendar'
+import { AnomalyPanel } from './components/AnomalyPanel'
 import { QuerySummary } from './components/QuerySummary'
 import { useExplorer } from './useExplorer'
 import { ApiMethodDialog } from './components/ApiMethodDialog'
@@ -180,6 +181,13 @@ export default function Explorer({ onOpenMethod }: { onOpenMethod: () => void })
             playing={state.playing}
             onSelect={state.onSelect}
             onPlay={state.onPlay}
+          />
+          <AnomalyPanel
+            connection={state.connection}
+            result={state.result}
+            selected={state.selected}
+            busy={state.busy}
+            onSelect={state.onSelect}
           />
           <p className="min-h-6 text-label text-muted" role="status" aria-live="polite">
             {state.notice}
